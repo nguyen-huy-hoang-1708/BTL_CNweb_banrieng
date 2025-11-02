@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { createUser } from './auth.service';
+import { createUser } from './auth.services';
 import { RegisterInput } from './auth.validation';
 
 export async function registerUserHandler(req: Request, res: Response) {
