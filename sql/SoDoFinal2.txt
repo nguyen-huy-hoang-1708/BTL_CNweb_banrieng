@@ -6,7 +6,7 @@ CREATE TABLE Users (
     full_name VARCHAR(100) NOT NULL,
     current_level ENUM('beginner', 'intermediate', 'advanced') DEFAULT 'beginner',
     role ENUM('user', 'admin', 'creator') NOT NULL DEFAULT 'user',
-    avatar_url VARCHAR(4096),
+    avatar_url VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_email (email)

@@ -1,13 +1,13 @@
 ### **Thiết kế Backend Chi tiết cho Nền tảng SkillSync**
 
-Đây là một thiết kế kiến trúc backend có khả năng mở rộng, dễ bảo trì cho nền tảng SkillSync của bạn, sử dụng ngăn xếp công nghệ đã đề xuất và phù hợp với lược đồ cơ sở dữ liệu PostgreSQL đã cung cấp.
+Đây là một thiết kế kiến trúc backend có khả năng mở rộng, dễ bảo trì cho nền tảng SkillSync của bạn, sử dụng ngăn xếp công nghệ đã đề xuất và phù hợp với lược đồ cơ sở dữ liệu MySQL đã cung cấp.
 
 #### **1. Tổng quan Kiến trúc và Công nghệ**
 
 Ngăn xếp công nghệ bạn đã chọn là rất phù hợp: hiện đại, hiệu quả và có sự hỗ trợ mạnh mẽ từ cộng đồng.
 
 *   **Framework**: Express.js với TypeScript
-*   **Database & ORM**: PostgreSQL với Prisma
+*   **Database & ORM**: MySQL với Prisma
 *   **Xác thực**: JWT (JSON Web Tokens) được lưu trong `httpOnly` cookies để tăng cường bảo mật.
 *   **Validation**: Zod (Rất tuyệt vời khi kết hợp với TypeScript để đảm bảo dữ liệu đầu vào luôn đúng định dạng).
 *   **Logging**: Winston (Để ghi log một cách có cấu trúc).
