@@ -2,11 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import { ValidationError } from '@/api/auth/auth.validation';
 
 export const validateRequest =
-  (validator: (body: any) => ValidationError[]) =>
+  (validator: (body: any) => ValidationError[] | Promise<ValidationError[]>) =>
     async (req: Request, res: Response, next: NextFunction) => {
 
       try {
-        const errors = validator(req.body);
+        const errors = await validator(req.body);
         if (errors.length > 0) {
           return res.status(400).json({
             success: false,
