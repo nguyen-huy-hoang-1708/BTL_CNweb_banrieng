@@ -4,6 +4,11 @@ export interface RegisterInput {
   password: string;
 }
 
+export interface LoginInput {
+  email: string;
+  password: string;
+}
+
 export interface ValidationError {
   field: string;
   message: string;
@@ -30,6 +35,26 @@ export function validateRegisterInput(input: RegisterInput): ValidationError[] {
     errors.push({
       field: 'password',
       message: 'Password must be at least 8 characters long',
+    });
+  }
+
+  return errors;
+}
+
+export function validateLoginInput(input: LoginInput): ValidationError[] {
+  const errors: ValidationError[] = [];
+
+  if (!input.email || !input.email.includes('@')) {
+    errors.push({
+      field: 'email',
+      message: 'Valid email is required',
+    });
+  }
+
+  if (!input.password || input.password.trim().length < 6) {
+    errors.push({
+      field: 'password',
+      message: 'Password must be at least 6 characters long',
     });
   }
 

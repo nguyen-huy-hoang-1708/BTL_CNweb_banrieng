@@ -8,199 +8,192 @@ datasource db {
 }
 
 model User {
-  user_id       String   @id @default(uuid()) @db.VarChar(36)
-  email         String   @unique @db.VarChar(255)
-  password_hash String   @db.VarChar(255)
-  full_name     String   @db.VarChar(100)
-  current_level Level    @default(beginner)
-  role          Role     @default(user)
-  avatar_url    String?  @db.VarChar(4096)
-  created_at    DateTime @default(now())
-  updated_at    DateTime @updatedAt
-
-  roadmaps          Roadmap[]
-  progress          UserProgress[]
-  interviewSessions InterviewSession[]
+  user_id           String             @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  email             String             @unique(map: "email") @db.VarChar(255)
+  password_hash     String             @db.VarChar(255)
+  full_name         String             @db.VarChar(100)
+  current_level     Level?             @default(beginner)
+  role              Role               @default(user)
+  avatar_url        String?            @db.VarChar(500)
+  created_at        DateTime?          @default(now()) @db.Timestamp(0)
+  updated_at        DateTime?          @default(now()) @updatedAt @db.Timestamp(0)
+  aiNotes           AINote[]
   cvs               CV[]
   certificates      Certificate[]
+  interviewSessions InterviewSession[]
   learningEvents    LearningEvent[]
-  aiNotes           AINote[]
+  roadmaps          Roadmap[]
+  progress          UserProgress[]
 
+  @@index([email], map: "idx_email")
   @@map("Users")
-  @@index([email])
 }
 
 model Roadmap {
-  roadmap_id  String   @id @default(uuid()) @db.VarChar(36)
-  title       String   @db.VarChar(100)
-  description String?  @db.Text
-  category    String   @db.VarChar(50)
-  image_url   String?  @db.VarChar(500)
-  created_by  String   @db.VarChar(36)
-  status      Status   @default(draft)
-  created_at  DateTime @default(now())
-  updated_at  DateTime @updatedAt
-
-  creator      User          @relation(fields: [created_by], references: [user_id])
-  modules      Module[]
+  roadmap_id   String        @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  title        String        @db.VarChar(100)
+  description  String?       @db.Text
+  category     String        @db.VarChar(50)
+  image_url    String?       @db.VarChar(500)
+  created_by   String        @db.VarChar(36)
+  status       Status        @default(draft)
+  created_at   DateTime?     @default(now()) @db.Timestamp(0)
+  updated_at   DateTime?     @default(now()) @updatedAt @db.Timestamp(0)
   certificates Certificate[]
+  modules      Module[]
+  creator      User          @relation(fields: [created_by], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "roadmaps_ibfk_1")
 
+  @@index([created_by], map: "created_by")
+  @@index([category], map: "idx_category")
   @@map("Roadmaps")
-  @@index([category])
 }
 
 model Module {
-  module_id       String   @id @default(uuid()) @db.VarChar(36)
-  roadmap_id      String   @db.VarChar(36)
-  title           String   @db.VarChar(100)
-  description     String?  @db.Text
-  content         String?  @db.LongText
+  module_id       String          @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  roadmap_id      String          @db.VarChar(36)
+  title           String          @db.VarChar(100)
+  description     String?         @db.Text
+  content         String?         @db.LongText
   order_index     Int
-  estimated_hours Decimal? @db.Decimal(4, 1)
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
+  estimated_hours Decimal?        @db.Decimal(4, 1)
+  created_at      DateTime?       @default(now()) @db.Timestamp(0)
+  updated_at      DateTime?       @default(now()) @updatedAt @db.Timestamp(0)
+  aiNotes         AINote[]
+  exercises       Exercise[]
+  learningEvents  LearningEvent[]
+  roadmap         Roadmap         @relation(fields: [roadmap_id], references: [roadmap_id], onDelete: Cascade, onUpdate: NoAction, map: "modules_ibfk_1")
+  userProgress    UserProgress[]
 
-  roadmap        Roadmap         @relation(fields: [roadmap_id], references: [roadmap_id], onDelete: Cascade)
-  userProgress   UserProgress[]
-  exercises      Exercise[]
-  learningEvents LearningEvent[]
-  aiNotes        AINote[]
-
-  @@unique([roadmap_id, order_index])
-  @@index([roadmap_id, order_index])
+  @@unique([roadmap_id, order_index], map: "uq_roadmap_order")
+  @@index([roadmap_id, order_index], map: "idx_roadmap_order")
   @@map("Modules")
 }
 
 model UserProgress {
-  progress_id           String            @id @default(uuid()) @db.VarChar(36)
-  user_id               String            @db.VarChar(36)
-  module_id             String            @db.VarChar(36)
-  status                ProgressStatus    @default(not_started)
-  completion_percentage Decimal           @default(0.00) @db.Decimal(5, 2)
-  started_at            DateTime?
-  completed_at          DateTime?
-  last_accessed_at      DateTime          @default(now()) @updatedAt
+  progress_id           String          @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  user_id               String          @db.VarChar(36)
+  module_id             String          @db.VarChar(36)
+  status                ProgressStatus? @default(not_started)
+  completion_percentage Decimal?        @default(0.00) @db.Decimal(5, 2)
+  started_at            DateTime?       @db.Timestamp(0)
+  completed_at          DateTime?       @db.Timestamp(0)
+  last_accessed_at      DateTime?       @default(now()) @updatedAt @db.Timestamp(0)
+  user                  User            @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "userprogress_ibfk_1")
+  module                Module          @relation(fields: [module_id], references: [module_id], onDelete: Cascade, onUpdate: NoAction, map: "userprogress_ibfk_2")
 
-  user   User   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  module Module @relation(fields: [module_id], references: [module_id], onDelete: Cascade)
-
-  @@unique([user_id, module_id])
-  @@index([user_id, status])
+  @@unique([user_id, module_id], map: "unique_user_module")
+  @@index([user_id, status], map: "idx_user_status")
+  @@index([module_id], map: "module_id")
   @@map("UserProgress")
 }
 
 model Exercise {
-  exercise_id   String     @id @default(uuid()) @db.VarChar(36)
-  module_id     String     @db.VarChar(36)
-  title         String     @db.VarChar(100)
-  description   String     @db.Text
+  exercise_id   String      @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  module_id     String      @db.VarChar(36)
+  title         String      @db.VarChar(100)
+  description   String      @db.Text
   examples      Json?
-  starter_code  String?    @db.MediumText
-  solution_code String?    @db.MediumText
-  difficulty    Difficulty @default(medium)
-  created_at    DateTime   @default(now())
-  updated_at    DateTime   @updatedAt
+  starter_code  String?     @db.MediumText
+  solution_code String?     @db.MediumText
+  difficulty    Difficulty? @default(medium)
+  created_at    DateTime?   @default(now()) @db.Timestamp(0)
+  updated_at    DateTime?   @default(now()) @updatedAt @db.Timestamp(0)
+  module        Module      @relation(fields: [module_id], references: [module_id], onDelete: Cascade, onUpdate: NoAction, map: "exercises_ibfk_1")
 
-  module Module @relation(fields: [module_id], references: [module_id], onDelete: Cascade)
-
-  @@index([module_id, difficulty])
+  @@index([module_id, difficulty], map: "idx_module_difficulty")
   @@map("Exercises")
 }
 
 model InterviewSession {
-  session_id     String         @id @default(uuid()) @db.VarChar(36)
-  user_id        String         @db.VarChar(36)
-  session_name   String         @db.VarChar(100)
+  session_id     String        @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  user_id        String        @db.VarChar(36)
+  session_name   String        @db.VarChar(100)
   interview_type InterviewType
   questions      Json
   user_answers   Json?
   ai_feedback    Json?
-  score          Decimal?       @db.Decimal(5, 2)
-  created_at     DateTime       @default(now())
+  score          Decimal?      @db.Decimal(5, 2)
+  created_at     DateTime?     @default(now()) @db.Timestamp(0)
+  user           User          @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "interviewsessions_ibfk_1")
 
-  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-
-  @@index([user_id, created_at])
+  @@index([user_id, created_at], map: "idx_user_date")
   @@map("InterviewSessions")
 }
 
 model CV {
-  cv_id          String       @id @default(uuid()) @db.VarChar(36)
-  user_id        String       @db.VarChar(36)
-  cv_name        String       @db.VarChar(100)
-  template_style TemplateStyle @default(modern)
+  cv_id          String         @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  user_id        String         @db.VarChar(36)
+  cv_name        String         @db.VarChar(100)
+  template_style TemplateStyle? @default(modern)
   personal_info  Json?
   education      Json?
   experience     Json?
   skills         Json?
   projects       Json?
-  pdf_url        String?      @db.VarChar(500)
-  created_at     DateTime     @default(now())
-  updated_at     DateTime     @updatedAt
+  pdf_url        String?        @db.VarChar(500)
+  created_at     DateTime?      @default(now()) @db.Timestamp(0)
+  updated_at     DateTime?      @default(now()) @updatedAt @db.Timestamp(0)
+  user           User           @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "cvs_ibfk_1")
 
-  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-
-  @@index([user_id, created_at])
+  @@index([user_id, created_at], map: "idx_user_date")
   @@map("CVs")
 }
 
 model Certificate {
-  certificate_id   String   @id @default(uuid()) @db.VarChar(36)
-  user_id          String   @db.VarChar(36)
-  roadmap_id       String   @db.VarChar(36)
-  certificate_name String   @db.VarChar(100)
-  issue_date       DateTime @default(now())
-  pdf_url          String?  @db.VarChar(500)
+  certificate_id   String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  user_id          String    @db.VarChar(36)
+  roadmap_id       String    @db.VarChar(36)
+  certificate_name String    @db.VarChar(100)
+  issue_date       DateTime? @default(now()) @db.Timestamp(0)
+  pdf_url          String?   @db.VarChar(500)
+  user             User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "certificates_ibfk_1")
+  roadmap          Roadmap   @relation(fields: [roadmap_id], references: [roadmap_id], onDelete: Cascade, onUpdate: NoAction, map: "certificates_ibfk_2")
 
-  user    User    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  roadmap Roadmap @relation(fields: [roadmap_id], references: [roadmap_id], onDelete: Cascade)
-
-  @@unique([user_id, roadmap_id])
-  @@index([user_id, roadmap_id])
+  @@unique([user_id, roadmap_id], map: "uq_cert_user_roadmap")
+  @@index([user_id, roadmap_id], map: "idx_user_roadmap")
+  @@index([roadmap_id], map: "roadmap_id")
   @@map("Certificates")
 }
 
 model LearningEvent {
-  event_id         String          @id @default(uuid()) @db.VarChar(36)
-  user_id          String          @db.VarChar(36)
-  title            String          @default("Study Session") @db.VarChar(150)
-  description      String?         @db.MediumText
-  status           EventStatus     @default(planned)
-  start_utc        DateTime        @db.DateTime
-  end_utc          DateTime        @db.DateTime
-  all_day          Boolean         @default(false)
-  timezone         String          @default("Asia/Ho_Chi_Minh") @db.VarChar(50)
-  module_id        String?         @db.VarChar(36)
-  color            String          @default("#3B82F6") @db.VarChar(7)
-  is_ai_suggested  Boolean         @default(false)
-  reminder_minutes Int?            @db.SmallInt
-  is_deleted       Boolean         @default(false)
-  created_at       DateTime        @default(now())
-  updated_at       DateTime        @updatedAt
+  event_id         String       @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  user_id          String       @db.VarChar(36)
+  title            String       @default("Study Session") @db.VarChar(150)
+  description      String?      @db.MediumText
+  status           EventStatus? @default(planned)
+  start_utc        DateTime     @db.DateTime(0)
+  end_utc          DateTime     @db.DateTime(0)
+  all_day          Boolean?     @default(false)
+  timezone         String?      @default("Asia/Ho_Chi_Minh") @db.VarChar(50)
+  module_id        String?      @db.VarChar(36)
+  color            String?      @default("#3B82F6") @db.VarChar(7)
+  is_ai_suggested  Boolean?     @default(false)
+  reminder_minutes Int?         @db.SmallInt
+  is_deleted       Boolean?     @default(false)
+  created_at       DateTime?    @default(now()) @db.Timestamp(0)
+  updated_at       DateTime?    @default(now()) @updatedAt @db.Timestamp(0)
+  user             User         @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "learningevents_ibfk_1")
+  module           Module?      @relation(fields: [module_id], references: [module_id], onUpdate: NoAction, map: "learningevents_ibfk_2")
 
-  user   User    @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  module Module? @relation(fields: [module_id], references: [module_id], onDelete: SetNull)
-
-  @@index([user_id, start_utc])
-  @@index([module_id])
-  @@index([user_id, is_ai_suggested])
+  @@index([user_id, is_ai_suggested], map: "idx_ai_suggested")
+  @@index([module_id], map: "idx_module")
+  @@index([user_id, start_utc], map: "idx_user_start")
   @@map("LearningEvents")
 }
 
 model AINote {
-  note_id        String   @id @default(uuid()) @db.VarChar(36)
-  user_id        String   @db.VarChar(36)
-  module_id      String   @db.VarChar(36)
+  note_id        String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  user_id        String    @db.VarChar(36)
+  module_id      String    @db.VarChar(36)
   note_type      NoteType
-  content        String   @db.LongText
-  created_at     DateTime @default(now())
+  content        String    @db.LongText
+  created_at     DateTime? @default(now()) @db.Timestamp(0)
   sequence_order Int
+  user           User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade, onUpdate: NoAction, map: "ainotes_ibfk_1")
+  module         Module    @relation(fields: [module_id], references: [module_id], onDelete: Cascade, onUpdate: NoAction, map: "ainotes_ibfk_2")
 
-  user   User   @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  module Module @relation(fields: [module_id], references: [module_id], onDelete: Cascade)
-
-  @@index([user_id, module_id, sequence_order])
-  @@index([module_id, note_type])
+  @@index([module_id, note_type], map: "idx_module_type")
+  @@index([user_id, module_id, sequence_order], map: "idx_user_module_order")
   @@map("AINotes")
 }
 
