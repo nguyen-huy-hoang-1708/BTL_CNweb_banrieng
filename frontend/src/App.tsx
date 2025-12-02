@@ -1,11 +1,13 @@
-import React from 'react'
-import { Layout, Menu, Button } from 'antd'
-import { Link, Route, Routes, useLocation } from 'react-router-dom'
-import { UserOutlined } from '@ant-design/icons'
+import React, { useState, useEffect } from 'react'
+import { Layout, Menu, Button, Dropdown } from 'antd'
+import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { UserOutlined, LogoutOutlined, DashboardOutlined, InfoCircleOutlined } from '@ant-design/icons'
 import Home from './pages/Home'
 import Roadmaps from './pages/Roadmaps'
+import ModuleDetail from './pages/ModuleDetail'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import Account from './pages/Account'
 import CVs from './pages/CVs'
 import Exercises from './pages/Exercises'
 import Calendar from './pages/Calendar'
@@ -17,6 +19,51 @@ const { Header, Content, Footer } = Layout
 
 const App: React.FC = () => {
   const location = useLocation()
+  const navigate = useNavigate()
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+
+  useEffect(() => {
+    // Check if user is logged in
+    const token = localStorage.getItem('token')
+    setIsLoggedIn(!!token)
+  }, [location.pathname])
+
+  const handleLogout = () => {
+    localStorage.removeItem('token')
+    localStorage.removeItem('user_id')
+    setIsLoggedIn(false)
+    navigate('/login')
+  }
+
+  const userMenuItems = [
+    {
+      key: 'account',
+      icon: <InfoCircleOutlined />,
+      label: 'Thông tin tài khoản',
+      onClick: () => navigate('/account')
+    },
+    {
+      key: 'progress',
+      icon: <DashboardOutlined />,
+      label: 'My Progress',
+      onClick: () => navigate('/progress')
+    },
+    {
+      key: 'cvs',
+      icon: <UserOutlined />,
+      label: 'My CVs',
+      onClick: () => navigate('/cvs')
+    },
+    {
+      type: 'divider' as const
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: 'Logout',
+      onClick: handleLogout
+    }
+  ]
 
   return (
     <Layout style={{ minHeight: '100vh', background: '#fff' }}>
@@ -52,16 +99,30 @@ const App: React.FC = () => {
             ]}
           />
         </div>
-        <Button type="primary" icon={<UserOutlined />} onClick={() => window.location.href = '/login'}>
-          SIGN IN/SIGN UP
-        </Button>
+        {isLoggedIn ? (
+          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+            <Button type="primary" icon={<UserOutlined />}>
+              Account
+            </Button>
+          </Dropdown>
+        ) : (
+          <Button 
+            type="primary" 
+            icon={<UserOutlined />} 
+            onClick={() => navigate('/login')}
+          >
+            SIGN IN/SIGN UP
+          </Button>
+        )}
       </Header>
       <Content style={{ padding: 0, minHeight: 'calc(100vh - 128px)' }}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/roadmaps" element={<Roadmaps />} />
+          <Route path="/roadmaps/:roadmapId/modules/:moduleId" element={<ModuleDetail />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/account" element={<Account />} />
           <Route path="/cvs" element={<CVs />} />
           <Route path="/exercises" element={<Exercises />} />
           <Route path="/calendar" element={<Calendar />} />

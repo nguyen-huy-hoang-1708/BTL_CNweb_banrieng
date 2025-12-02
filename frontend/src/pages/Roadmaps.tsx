@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Row, Col, Card, Button, Spin, Alert, Empty, Tag, Modal, Typography, Space, message } from 'antd'
-import { BookOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import { Row, Col, Card, Button, Spin, Alert, Empty, Tag, Modal, Typography, Space, message, List } from 'antd'
+import { BookOutlined, CheckCircleOutlined, ArrowRightOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
-const { Title, Paragraph } = Typography
+const { Title, Paragraph, Text } = Typography
 
 type Roadmap = {
   roadmap_id: string
@@ -14,11 +15,22 @@ type Roadmap = {
   status?: string
 }
 
+type Module = {
+  module_id: string
+  title: string
+  description?: string
+  content?: string
+  order_index: number
+  estimated_hours?: number
+}
+
 const Roadmaps: React.FC = () => {
+  const navigate = useNavigate()
   const [items, setItems] = useState<Roadmap[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedRoadmap, setSelectedRoadmap] = useState<Roadmap | null>(null)
+  const [modules, setModules] = useState<Module[]>([])
   const [modalVisible, setModalVisible] = useState(false)
 
   useEffect(() => {
@@ -42,8 +54,13 @@ const Roadmaps: React.FC = () => {
 
   const handleViewDetails = async (roadmap: Roadmap) => {
     try {
-      const res = await api.get(`/api/roadmaps/${roadmap.roadmap_id}`)
-      setSelectedRoadmap(res.data?.data || res.data)
+      setSelectedRoadmap(roadmap)
+      
+      // Fetch modules
+      const modulesRes = await api.get(`/api/roadmaps/${roadmap.roadmap_id}/modules`)
+      const modulesData = modulesRes.data?.data || modulesRes.data || []
+      setModules(Array.isArray(modulesData) ? modulesData.sort((a: Module, b: Module) => a.order_index - b.order_index) : [])
+      
       setModalVisible(true)
     } catch (err: any) {
       message.error('Failed to load roadmap details')
@@ -79,9 +96,22 @@ const Roadmaps: React.FC = () => {
               <Card
                 hoverable
                 cover={
-                  <div style={{ height: 200, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <BookOutlined style={{ fontSize: 48, color: '#1890ff' }} />
-                  </div>
+                  item.image_url ? (
+                    <img
+                      alt={item.title}
+                      src={item.image_url}
+                      style={{ height: 200, objectFit: 'cover', width: '100%' }}
+                      onError={(e) => {
+                        // Fallback to icon if image fails to load
+                        e.currentTarget.style.display = 'none'
+                        e.currentTarget.parentElement!.innerHTML = `<div style="height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center;"><span style="font-size: 48px; color: #1890ff;">📚</span></div>`
+                      }}
+                    />
+                  ) : (
+                    <div style={{ height: 200, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <BookOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+                    </div>
+                  )
                 }
                 actions={[
                   <Button type="link" onClick={() => handleViewDetails(item)}>View Details</Button>,
@@ -104,12 +134,18 @@ const Roadmaps: React.FC = () => {
       )}
 
       <Modal
-        title={selectedRoadmap?.title}
+        title={
+          <Space>
+            <BookOutlined />
+            <span>{selectedRoadmap?.title}</span>
+            {selectedRoadmap?.category && <Tag color="blue">{selectedRoadmap.category}</Tag>}
+          </Space>
+        }
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={[
           <Button key="cancel" onClick={() => setModalVisible(false)}>
-            Close
+            Đóng
           </Button>,
           <Button
             key="enroll"
@@ -117,19 +153,84 @@ const Roadmaps: React.FC = () => {
             icon={<CheckCircleOutlined />}
             onClick={() => selectedRoadmap && handleEnroll(selectedRoadmap.roadmap_id)}
           >
-            Enroll Now
+            Đăng ký học
           </Button>,
         ]}
-        width={700}
+        width={800}
       >
         {selectedRoadmap && (
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Paragraph>{selectedRoadmap.description}</Paragraph>
-            {selectedRoadmap.category && (
-              <div>
-                <strong>Category:</strong> <Tag color="blue">{selectedRoadmap.category}</Tag>
-              </div>
-            )}
+          <Space direction="vertical" style={{ width: '100%' }} size="large">
+            <Paragraph style={{ fontSize: 15 }}>{selectedRoadmap.description}</Paragraph>
+
+            <div>
+              <Title level={4}>📚 Danh sách bài học ({modules.length} bài)</Title>
+              
+              {modules.length === 0 ? (
+                <Empty description="Chưa có bài học nào" />
+              ) : (
+                <List
+                  dataSource={modules}
+                  renderItem={(module, index) => (
+                    <List.Item
+                      key={module.module_id}
+                      style={{
+                        padding: '16px',
+                        border: '1px solid #f0f0f0',
+                        borderRadius: 8,
+                        marginBottom: 12,
+                        cursor: 'pointer',
+                        transition: 'all 0.3s',
+                        background: '#fafafa'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#e6f7ff'
+                        e.currentTarget.style.borderColor = '#1890ff'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#fafafa'
+                        e.currentTarget.style.borderColor = '#f0f0f0'
+                      }}
+                      onClick={() => navigate(`/roadmaps/${selectedRoadmap.roadmap_id}/modules/${module.module_id}`)}
+                    >
+                      <List.Item.Meta
+                        avatar={
+                          <div style={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: '50%',
+                            background: '#1890ff',
+                            color: 'white',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 'bold',
+                            fontSize: 16
+                          }}>
+                            {index + 1}
+                          </div>
+                        }
+                        title={
+                          <Space>
+                            <Text strong style={{ fontSize: 15 }}>{module.title}</Text>
+                            {module.estimated_hours && (
+                              <Tag color="purple">⏱️ {module.estimated_hours}h</Tag>
+                            )}
+                          </Space>
+                        }
+                        description={
+                          <Text style={{ fontSize: 14 }}>
+                            {module.description || 'Nội dung chi tiết của bài học'}
+                          </Text>
+                        }
+                      />
+                      <Button type="link" icon={<ArrowRightOutlined />}>
+                        Học ngay
+                      </Button>
+                    </List.Item>
+                  )}
+                />
+              )}
+            </div>
           </Space>
         )}
       </Modal>

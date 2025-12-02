@@ -1,76 +1,98 @@
 import React, { useEffect, useState } from 'react'
-import { List, Card, Progress, Spin, Alert, Empty } from 'antd'
+import { List, Card, Progress, Spin, Alert, Empty, Typography } from 'antd'
 import api from '../services/api'
 
-type UserProgress = {
-  progress_id: string
+const { Title, Text } = Typography
+
+type ModuleWithProgress = {
   module_id: string
+  title: string
+  roadmap_title: string
   status: string
   completion_percentage: number
 }
 
 const ProgressPage: React.FC = () => {
-  const [items, setItems] = useState<UserProgress[]>([])
+  const [items, setItems] = useState<ModuleWithProgress[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Fetch all modules with progress from the backend
+    const userId = localStorage.getItem('user_id')
+    if (!userId) {
+      setError('Please login to view your progress')
+      return
+    }
+
+    // Fetch roadmaps and show modules (progress tracking coming soon)
     setLoading(true)
     api
       .get('/api/roadmaps')
       .then(async (res) => {
         const roadmaps = res.data?.data || res.data || []
-        const allProgress: UserProgress[] = []
+        const modulesWithProgress: ModuleWithProgress[] = []
         
-        // For each roadmap, try to fetch progress for its modules
+        // Get first 3 roadmaps
         for (const roadmap of roadmaps.slice(0, 3)) {
           try {
-            // Get roadmap details which includes modules
             const roadmapRes = await api.get(`/api/roadmaps/${roadmap.roadmap_id}`)
             const modules = roadmapRes.data?.data?.modules || []
             
-            // Fetch progress for each module
-            for (const module of modules.slice(0, 2)) {
-              try {
-                const progressRes = await api.get(`/api/progress/modules/${module.module_id}/progress`)
-                const progress = progressRes.data?.data
-                if (progress) {
-                  allProgress.push(progress)
-                }
-              } catch (err) {
-                // Module might not have progress yet, skip it
-              }
+            // Show first 3 modules of each roadmap with placeholder progress
+            for (const module of modules.slice(0, 3)) {
+              modulesWithProgress.push({
+                module_id: module.module_id,
+                title: module.title,
+                roadmap_title: roadmap.title,
+                status: 'not_started',
+                completion_percentage: 0
+              })
             }
           } catch (err) {
-            // Skip roadmap if error
+            console.error('Error fetching roadmap:', err)
           }
         }
         
-        setItems(allProgress)
+        setItems(modulesWithProgress)
       })
       .catch((err) => {
-        setError(err.message || 'Failed to load progress')
+        setError(err.message || 'Failed to load modules')
       })
       .finally(() => setLoading(false))
   }, [])
 
   if (loading) return <Spin style={{ display: 'block', margin: '48px auto' }} />
-  if (error) return <Alert type="warning" message={error} showIcon style={{ marginBottom: 16 }} />
+  if (error) return <Alert type="warning" message={error} showIcon style={{ margin: '24px' }} />
 
   return (
-    <div>
+    <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
+      <Title level={2}>📊 My Learning Progress</Title>
+      <Text type="secondary" style={{ display: 'block', marginBottom: 24 }}>
+        Track your progress across different courses and modules
+      </Text>
+      
       {items.length === 0 ? (
-        <Empty description="No progress data available" />
+        <Empty description="No modules found. Start learning to track your progress!" />
       ) : (
         <List
-          grid={{ gutter: 16, column: 2 }}
+          grid={{ gutter: 16, xs: 1, sm: 2, md: 2, lg: 3 }}
           dataSource={items}
           renderItem={(item) => (
             <List.Item>
-              <Card title={`Module: ${item.module_id}`}>
-                <p>Status: {item.status}</p>
-                <Progress percent={Number(item.completion_percentage)} />
+              <Card 
+                title={item.title}
+                extra={<Text type="secondary">{item.roadmap_title}</Text>}
+              >
+                <div style={{ marginBottom: 8 }}>
+                  <Text strong>Status: </Text>
+                  <Text type={item.status === 'completed' ? 'success' : 'secondary'}>
+                    {item.status}
+                  </Text>
+                </div>
+                <Progress 
+                  percent={Number(item.completion_percentage)} 
+                  status={item.completion_percentage === 100 ? 'success' : 'active'}
+                />
               </Card>
             </List.Item>
           )}

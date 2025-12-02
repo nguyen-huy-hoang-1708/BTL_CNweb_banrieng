@@ -36,6 +36,22 @@ export async function getRoadmapHandler(req: Request, res: Response) {
   }
 }
 
+export async function getModulesHandler(req: Request, res: Response) {
+  try {
+    const { roadmapId } = req.params;
+    if (!isValidRoadmapId(roadmapId)) {
+      return res.status(400).json({ success: false, data: null, error: 'Invalid roadmap identifier' });
+    }
+    const roadmap = await getRoadmapWithModules(roadmapId);
+    if (!roadmap) {
+      return res.status(404).json({ success: false, data: null, error: 'Roadmap not found' });
+    }
+    return res.status(200).json({ success: true, data: roadmap.modules || [], error: null });
+  } catch (error) {
+    return res.status(500).json({ success: false, data: null, error: 'Internal Server Error' });
+  }
+}
+
 export async function enrollRoadmapHandler(req: Request, res: Response) {
   try {
     const { roadmapId } = req.params;

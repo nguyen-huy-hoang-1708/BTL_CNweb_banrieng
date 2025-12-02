@@ -44,3 +44,54 @@ export async function loginUser(email: string, password: string): Promise<{ user
     const { password_hash, ...userWithoutPassword } = user;
     return { user: userWithoutPassword, token };
 }
+
+export async function getUserById(userId: string): Promise<Omit<User, 'password_hash'> | null> {
+    const user = await prisma.user.findUnique({
+        where: { user_id: userId },
+    });
+
+    if (!user) {
+        return null;
+    }
+
+    const { password_hash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+}
+
+export async function updateUserProfile(userId: string, updates: { full_name?: string; avatar_url?: string }): Promise<Omit<User, 'password_hash'> | null> {
+    const user = await prisma.user.update({
+        where: { user_id: userId },
+        data: updates,
+    });
+
+    const { password_hash, ...userWithoutPassword } = user;
+    return userWithoutPassword;
+}
+
+export async function updateUserPassword(userId: string, currentPassword: string, newPassword: string): Promise<boolean> {
+    const user = await prisma.user.findUnique({
+        where: { user_id: userId },
+    });
+
+    if (!user) {
+        return false;
+    }
+
+    // Verify current password
+    const isValid = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isValid) {
+        return false;
+    }
+
+    // Hash new password
+    const salt = await bcrypt.genSalt(10);
+    const password_hash = await bcrypt.hash(newPassword, salt);
+
+    // Update password
+    await prisma.user.update({
+        where: { user_id: userId },
+        data: { password_hash },
+    });
+
+    return true;
+}

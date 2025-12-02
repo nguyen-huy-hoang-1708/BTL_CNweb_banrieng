@@ -2,16 +2,16 @@
 
 -- ================== USERS ==================
 INSERT INTO Users (user_id, email, password_hash, full_name, current_level, role, avatar_url) VALUES
-(UUID(),'alice@example.com','pw','Alice Nguyen','beginner','user','https://i.pravatar.cc/100?img=1'),
-(UUID(),'bob@example.com','pw','Bob Tran','intermediate','user','https://i.pravatar.cc/100?img=2'),
-(UUID(),'charlie@example.com','pw','Charlie Pham','beginner','admin','https://i.pravatar.cc/100?img=3'),
-(UUID(),'daisy@example.com','pw','Daisy Le','advanced','user','https://i.pravatar.cc/100?img=4'),
-(UUID(),'ethan@example.com','pw','Ethan Vo','beginner','user','https://i.pravatar.cc/100?img=5'),
-(UUID(),'fiona@example.com','pw','Fiona Tran','beginner','user','https://i.pravatar.cc/100?img=6'),
-(UUID(),'george@example.com','pw','George Bui','intermediate','creator','https://i.pravatar.cc/100?img=7'),
-(UUID(),'hannah@example.com','pw','Hannah Hoang','advanced','user','https://i.pravatar.cc/100?img=8'),
-(UUID(),'ivan@example.com','pw','Ivan Dang','beginner','user','https://i.pravatar.cc/100?img=9'),
-(UUID(),'julia@example.com','pw','Julia Do','advanced','user','https://i.pravatar.cc/100?img=10');
+(UUID(),'alice@example.com','password123','Alice Nguyen','beginner','user','https://i.pravatar.cc/100?img=1'),
+(UUID(),'bob@example.com','password123','Bob Tran','intermediate','user','https://i.pravatar.cc/100?img=2'),
+(UUID(),'charlie@example.com','password123','Charlie Pham','beginner','admin','https://i.pravatar.cc/100?img=3'),
+(UUID(),'daisy@example.com','password123','Daisy Le','advanced','user','https://i.pravatar.cc/100?img=4'),
+(UUID(),'ethan@example.com','password123','Ethan Vo','beginner','user','https://i.pravatar.cc/100?img=5'),
+(UUID(),'fiona@example.com','password123','Fiona Tran','beginner','user','https://i.pravatar.cc/100?img=6'),
+(UUID(),'george@example.com','password123','George Bui','intermediate','creator','https://i.pravatar.cc/100?img=7'),
+(UUID(),'hannah@example.com','password123','Hannah Hoang','advanced','user','https://i.pravatar.cc/100?img=8'),
+(UUID(),'ivan@example.com','password123','Ivan Dang','beginner','user','https://i.pravatar.cc/100?img=9'),
+(UUID(),'julia@example.com','password123','Julia Do','advanced','user','https://i.pravatar.cc/100?img=10');
 
 -- ================== ROADMAPS ==================
 INSERT INTO Roadmaps (roadmap_id, title, description, category, image_url, created_by, status)
