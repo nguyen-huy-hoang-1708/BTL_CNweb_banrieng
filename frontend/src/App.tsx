@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { Layout, Menu, Button, Dropdown } from 'antd'
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { UserOutlined, LogoutOutlined, DashboardOutlined, InfoCircleOutlined } from '@ant-design/icons'
+import { UserOutlined, LogoutOutlined, DashboardOutlined, InfoCircleOutlined, SettingOutlined } from '@ant-design/icons'
 import Home from './pages/Home'
 import Roadmaps from './pages/Roadmaps'
 import ModuleDetail from './pages/ModuleDetail'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Account from './pages/Account'
+import Admin from './pages/Admin'
 import CVs from './pages/CVs'
 import Exercises from './pages/Exercises'
 import Calendar from './pages/Calendar'
@@ -21,11 +22,27 @@ const App: React.FC = () => {
   const location = useLocation()
   const navigate = useNavigate()
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
 
   useEffect(() => {
     // Check if user is logged in
     const token = localStorage.getItem('token')
+    const userId = localStorage.getItem('user_id')
     setIsLoggedIn(!!token)
+    
+    // Check if user is admin
+    if (token && userId) {
+      import('./services/api').then(({ default: api }) => {
+        api.get(`/api/auth/users/${userId}`)
+          .then((res) => {
+            const user = res.data?.data
+            setIsAdmin(user?.role === 'admin')
+          })
+          .catch(() => setIsAdmin(false))
+      })
+    } else {
+      setIsAdmin(false)
+    }
   }, [location.pathname])
 
   const handleLogout = () => {
@@ -42,6 +59,12 @@ const App: React.FC = () => {
       label: 'Thông tin tài khoản',
       onClick: () => navigate('/account')
     },
+    ...(isAdmin ? [{
+      key: 'admin',
+      icon: <SettingOutlined />,
+      label: 'Admin Panel',
+      onClick: () => navigate('/admin')
+    }] : []),
     {
       key: 'progress',
       icon: <DashboardOutlined />,
@@ -123,6 +146,7 @@ const App: React.FC = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/cvs" element={<CVs />} />
           <Route path="/exercises" element={<Exercises />} />
           <Route path="/calendar" element={<Calendar />} />

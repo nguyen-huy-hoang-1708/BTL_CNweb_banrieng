@@ -1,6 +1,7 @@
 import express, {Application, Request, Response} from 'express';
 import cors from 'cors';
 import authRouter from './api/auth/auth.routes';
+import adminRouter from './api/admin/admin.routes';
 import calendarRouter from './api/calendar/calendar.routes';
 import certificatesRouter from './api/certificates/certificates.routes';
 import cvsRouter from './api/cvs/cvs.routes';
@@ -17,6 +18,7 @@ app.use(express.json());
 app.use(express.urlencoded({extended: true}));
 
 app.use('/api/auth', authRouter);
+app.use('/api/admin', adminRouter);
 app.use('/api/calendar', calendarRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/roadmaps', roadmapsRouter);
