@@ -15,6 +15,7 @@ import Calendar from './pages/Calendar'
 import Progress from './pages/Progress'
 import Certificates from './pages/Certificates'
 import Interviews from './pages/Interviews'
+import NotificationBell from './components/NotificationBell'
 
 const { Header, Content, Footer } = Layout
 
@@ -93,25 +94,34 @@ const App: React.FC = () => {
       <Header style={{ 
         background: 'rgba(255, 255, 255, 0.95)', 
         boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        padding: '0 50px',
+        padding: '0 20px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         position: 'sticky',
         top: 0,
+        width: '100%',
         zIndex: 1000
       }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 0, marginRight: 16 }}>
           <div style={{ 
-            fontSize: 24, 
+            fontSize: 18, 
             fontWeight: 700, 
             color: '#1890ff',
-            marginRight: 50
+            marginRight: 16,
+            whiteSpace: 'nowrap',
+            flexShrink: 0
           }}>⚡ SkillSync</div>
           <Menu 
             mode="horizontal" 
             selectedKeys={[location.pathname]}
-            style={{ border: 'none', background: 'transparent', flex: 1 }}
+            style={{ 
+              border: 'none', 
+              background: 'transparent', 
+              flex: '1 1 auto', 
+              minWidth: 0,
+              fontSize: 14
+            }}
             items={[
               { key: '/', label: <Link to="/">HOME</Link> },
               { key: '/roadmaps', label: <Link to="/roadmaps">COURSES</Link> },
@@ -122,21 +132,25 @@ const App: React.FC = () => {
             ]}
           />
         </div>
-        {isLoggedIn ? (
-          <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-            <Button type="primary" icon={<UserOutlined />}>
-              Account
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          {/* Always show NotificationBell for testing - TODO: Remove in production */}
+          <NotificationBell />
+          {isLoggedIn ? (
+            <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Button type="primary" icon={<UserOutlined />}>
+                Account
+              </Button>
+            </Dropdown>
+          ) : (
+            <Button 
+              type="primary" 
+              icon={<UserOutlined />} 
+              onClick={() => navigate('/login')}
+            >
+              SIGN IN/SIGN UP
             </Button>
-          </Dropdown>
-        ) : (
-          <Button 
-            type="primary" 
-            icon={<UserOutlined />} 
-            onClick={() => navigate('/login')}
-          >
-            SIGN IN/SIGN UP
-          </Button>
-        )}
+          )}
+        </div>
       </Header>
       <Content style={{ padding: 0, minHeight: 'calc(100vh - 128px)' }}>
         <Routes>

@@ -8,6 +8,7 @@ import cvsRouter from './api/cvs/cvs.routes';
 import exercisesRouter from './api/exercises/exercises.routes';
 import interviewsRouter from './api/interviews/interviews.routes';
 import notesRouter from './api/notes/notes.routes';
+import notificationsRouter from './api/notifications/notifications.routes';
 import progressRouter from './api/progress/progress.routes';
 import roadmapsRouter from './api/roadmaps/roadmaps.routes';
 
@@ -20,6 +21,7 @@ app.use(express.urlencoded({extended: true}));
 app.use('/api/auth', authRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/calendar', calendarRouter);
+app.use('/api/notifications', notificationsRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/roadmaps', roadmapsRouter);
 app.use('/api/certificates', certificatesRouter);

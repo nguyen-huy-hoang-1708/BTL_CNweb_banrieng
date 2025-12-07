@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Calendar as AntCalendar, Badge, Modal, Form, Input, DatePicker, Button, message, Typography, Space, Card, List } from 'antd'
-import { CalendarOutlined, PlusOutlined, ClockCircleOutlined } from '@ant-design/icons'
+import { Calendar as AntCalendar, Badge, Modal, Form, Input, DatePicker, Button, message, Typography, Space, Card, List, Select, InputNumber } from 'antd'
+import { CalendarOutlined, PlusOutlined, ClockCircleOutlined, BellOutlined } from '@ant-design/icons'
 import type { Dayjs } from 'dayjs'
 import dayjs from 'dayjs'
 import api from '../services/api'
@@ -15,13 +15,37 @@ type LearningEvent = {
   end_utc: string
   status?: string
   color?: string
+  reminder_minutes?: number
+  module_id?: string
 }
 
 const Calendar: React.FC = () => {
   const [events, setEvents] = useState<LearningEvent[]>([])
   const [modalVisible, setModalVisible] = useState(false)
   const [selectedDate, setSelectedDate] = useState<Dayjs>(dayjs())
+  const [modules, setModules] = useState<any[]>([])
   const [form] = Form.useForm()
+
+  const fetchModules = async () => {
+    try {
+      const res = await api.get('/api/roadmaps')
+      const roadmaps = res.data?.data || []
+      const allModules: any[] = []
+      
+      for (const roadmap of roadmaps.slice(0, 3)) {
+        const detailRes = await api.get(`/api/roadmaps/${roadmap.roadmap_id}`)
+        const roadmapModules = detailRes.data?.data?.modules || []
+        allModules.push(...roadmapModules.map((m: any) => ({
+          ...m,
+          roadmap_title: roadmap.title
+        })))
+      }
+      
+      setModules(allModules)
+    } catch (err) {
+      console.error('Failed to load modules:', err)
+    }
+  }
 
   const fetchEvents = async () => {
     try {
@@ -36,6 +60,7 @@ const Calendar: React.FC = () => {
 
   useEffect(() => {
     fetchEvents()
+    fetchModules()
   }, [])
 
   const onCreateEvent = async (values: any) => {
@@ -45,9 +70,11 @@ const Calendar: React.FC = () => {
         description: values.description,
         start_utc: values.start_utc.toISOString(),
         end_utc: values.end_utc.toISOString(),
+        module_id: values.module_id,
+        reminder_minutes: values.reminder_minutes,
         status: 'planned'
       })
-      message.success('Event created successfully!')
+      message.success('Sự kiện đã được tạo và nhắc nhở đã được đặt!')
       setModalVisible(false)
       form.resetFields()
       fetchEvents()
@@ -90,7 +117,7 @@ const Calendar: React.FC = () => {
         <Card
           extra={
             <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
-              Add Event
+              Tạo sự kiện
             </Button>
           }
         >
@@ -119,32 +146,103 @@ const Calendar: React.FC = () => {
       </Space>
 
       <Modal
-        title="Create Learning Event"
+        title="Tạo sự kiện học tập"
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false)
           form.resetFields()
         }}
-        onOk={() => form.submit()}
+        footer={null}
         width={600}
       >
         <Form form={form} layout="vertical" onFinish={onCreateEvent}>
-          <Form.Item label="Event Title" name="title" rules={[{ required: true, message: 'Please enter event title' }]}>
-            <Input placeholder="e.g., Study React Hooks" />
+          <Form.Item name="title" label="Tiêu đề" rules={[{ required: true, message: 'Vui lòng nhập tiêu đề!' }]}>
+            <Input placeholder="Ví dụ: Học React Hooks" />
           </Form.Item>
-          <Form.Item label="Description" name="description">
-            <Input.TextArea rows={3} placeholder="Add event description..." />
+
+          <Form.Item name="description" label="Mô tả">
+            <Input.TextArea rows={3} placeholder="Mô tả chi tiết về buổi học..." />
           </Form.Item>
-          <Form.Item label="Start Time" name="start_utc" rules={[{ required: true, message: 'Please select start time' }]}>
-            <DatePicker showTime style={{ width: '100%' }} format="YYYY-MM-DD HH:mm" />
+
+          <Form.Item name="module_id" label="Bài học liên quan">
+            <Select
+              placeholder="Chọn bài học (tùy chọn)"
+              allowClear
+              showSearch
+              optionFilterProp="children"
+            >
+              {modules.map(m => (
+                <Select.Option key={m.module_id} value={m.module_id}>
+                  {m.title} ({m.roadmap_title})
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
-          <Form.Item label="End Time" name="end_utc" rules={[{ required: true, message: 'Please select end time' }]}>
-            <DatePicker showTime style={{ width: '100%' }} format="YYYY-MM-DD HH:mm" />
+
+          <Form.Item
+            name="start_utc"
+            label="Thời gian bắt đầu"
+            rules={[{ required: true, message: 'Vui lòng chọn thời gian!' }]}
+          >
+            <DatePicker 
+              showTime 
+              format="DD/MM/YYYY HH:mm"
+              style={{ width: '100%' }}
+              placeholder="Chọn ngày giờ bắt đầu"
+            />
+          </Form.Item>
+
+          <Form.Item
+            name="end_utc"
+            label="Thời gian kết thúc"
+            rules={[{ required: true, message: 'Vui lòng chọn thời gian!' }]}
+          >
+            <DatePicker 
+              showTime 
+              format="DD/MM/YYYY HH:mm"
+              style={{ width: '100%' }}
+              placeholder="Chọn ngày giờ kết thúc"
+            />
+          </Form.Item>
+
+          <Form.Item 
+            name="reminder_minutes" 
+            label={<><BellOutlined /> Nhắc nhở trước (phút)</>}
+            initialValue={15}
+          >
+            <Select>
+              <Select.Option value={5}>5 phút trước</Select.Option>
+              <Select.Option value={15}>15 phút trước</Select.Option>
+              <Select.Option value={30}>30 phút trước</Select.Option>
+              <Select.Option value={60}>1 giờ trước</Select.Option>
+              <Select.Option value={120}>2 giờ trước</Select.Option>
+              <Select.Option value={1440}>1 ngày trước</Select.Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button onClick={() => setModalVisible(false)}>Hủy</Button>
+              <Button type="primary" htmlType="submit">
+                Tạo sự kiện
+              </Button>
+            </Space>
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+      {/* Floating action button for mobile/desktop discoverability */}
+      <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1200 }}>
+        <Button
+          type="primary"
+          shape="circle"
+          size="large"
+          icon={<PlusOutlined />}
+          onClick={() => setModalVisible(true)}
+          title="Tạo sự kiện"
+        />
+      </div>
+</div>
   )
-}
+  }
 
 export default Calendar
