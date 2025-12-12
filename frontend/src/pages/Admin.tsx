@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react'
-import { Tabs, Table, Button, Space, Modal, Form, Input, Select, message, Popconfirm, Tag, Card } from 'antd'
-import { UserOutlined, BookOutlined, EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons'
+import { Tabs, Table, Button, Space, Modal, Form, Input, Select, message, Popconfirm, Tag, Card, Typography } from 'antd'
+import { UserOutlined, BookOutlined, EditOutlined, DeleteOutlined, PlusOutlined, CrownOutlined } from '@ant-design/icons'
 import api from '../services/api'
 import { useNavigate } from 'react-router-dom'
+
+const { Title } = Typography
 
 const { TabPane } = Tabs
 
@@ -209,11 +211,12 @@ const Admin: React.FC = () => {
       render: (role: string, record: User) => (
         <Select
           value={role}
-          style={{ width: 100 }}
+          style={{ width: 120, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}
           onChange={(value) => handleUpdateUserRole(record.user_id, value)}
+          size="middle"
         >
-          <Select.Option value="user">User</Select.Option>
-          <Select.Option value="admin">Admin</Select.Option>
+          <Select.Option value="user">👤 User</Select.Option>
+          <Select.Option value="admin">👑 Admin</Select.Option>
         </Select>
       ),
     },
@@ -221,7 +224,28 @@ const Admin: React.FC = () => {
       title: 'Level',
       dataIndex: 'current_level',
       key: 'current_level',
-      render: (level: string) => <Tag color="blue">{level}</Tag>,
+      render: (level: string) => {
+        const colorMap: Record<string, string> = {
+          beginner: 'green',
+          intermediate: 'blue',
+          advanced: 'purple'
+        }
+        return (
+          <Tag 
+            color={colorMap[level] || 'default'} 
+            style={{ 
+              borderRadius: 12, 
+              padding: '4px 12px', 
+              fontWeight: 500,
+              border: 'none',
+              fontSize: 13,
+              fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+            }}
+          >
+            {level}
+          </Tag>
+        )
+      },
     },
     {
       title: 'Created',
@@ -239,7 +263,15 @@ const Admin: React.FC = () => {
           okText="Yes"
           cancelText="No"
         >
-          <Button type="text" danger icon={<DeleteOutlined />} />
+          <Button 
+            type="text" 
+            danger 
+            icon={<DeleteOutlined />} 
+            style={{ 
+              borderRadius: 8,
+              fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+            }}
+          />
         </Popconfirm>
       ),
     },
@@ -261,7 +293,36 @@ const Admin: React.FC = () => {
       title: 'Difficulty',
       dataIndex: 'category',
       key: 'category',
-      render: (category: string) => <Tag color="blue">{category}</Tag>,
+      render: (category: string) => {
+        const categoryColors: Record<string, string> = {
+          'Web': '#1890ff',
+          'Data': '#722ed1',
+          'AI': '#eb2f96',
+          'Mobile': '#52c41a',
+          'Cloud': '#13c2c2',
+          'Game': '#fa8c16',
+          'Design': '#f759ab',
+          'Security': '#fa541c'
+        }
+        const colorKey = Object.keys(categoryColors).find(k => category.toLowerCase().includes(k.toLowerCase()))
+        const color = colorKey ? categoryColors[colorKey] : '#1890ff'
+        
+        return (
+          <Tag 
+            color={color} 
+            style={{ 
+              borderRadius: 12, 
+              padding: '4px 12px', 
+              fontWeight: 500,
+              border: 'none',
+              fontSize: 13,
+              fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+            }}
+          >
+            {category}
+          </Tag>
+        )
+      },
     },
     {
       title: 'Modules',
@@ -276,30 +337,47 @@ const Admin: React.FC = () => {
         <Space>
           <Button
             icon={<PlusOutlined />}
-            size="small"
+            size="middle"
             onClick={() => {
               setCurrentRoadmapId(record.roadmap_id)
               setSelectedModule(null)
               moduleForm.resetFields()
               setModuleModalVisible(true)
             }}
+            style={{ 
+              borderRadius: 8, 
+              fontWeight: 500,
+              fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+            }}
           >
             Add Module
           </Button>
           <Button
             icon={<EditOutlined />}
-            size="small"
+            size="middle"
             onClick={() => {
               setSelectedRoadmap(record)
               roadmapForm.setFieldsValue(record)
               setRoadmapModalVisible(true)
+            }}
+            style={{ 
+              borderRadius: 8,
+              fontFamily: "'Segoe UI', 'Roboto', sans-serif"
             }}
           />
           <Popconfirm
             title="Delete this roadmap?"
             onConfirm={() => handleDeleteRoadmap(record.roadmap_id)}
           >
-            <Button danger icon={<DeleteOutlined />} size="small" />
+            <Button 
+              danger 
+              icon={<DeleteOutlined />} 
+              size="middle" 
+              style={{ 
+                borderRadius: 8,
+                fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+              }}
+            />
           </Popconfirm>
         </Space>
       ),
@@ -307,20 +385,52 @@ const Admin: React.FC = () => {
   ]
 
   return (
-    <div style={{ padding: '24px', maxWidth: 1400, margin: '0 auto' }}>
-      <Card>
-        <h1>🔐 Admin Panel</h1>
-        <Tabs defaultActiveKey="users">
-          <TabPane tab={<span><UserOutlined /> Users</span>} key="users">
+    <div style={{ padding: '40px 60px', maxWidth: 1600, margin: '0 auto', background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
+      <div style={{ marginBottom: 32 }}>
+        <Title level={1} style={{ 
+          fontSize: 38, 
+          fontWeight: 700, 
+          marginBottom: 12,
+          fontFamily: "'Segoe UI', 'Roboto', sans-serif",
+          display: 'flex',
+          alignItems: 'center',
+          gap: 12
+        }}>
+          <CrownOutlined style={{ color: '#faad14', fontSize: 38 }} />
+          Admin Panel
+        </Title>
+        <Typography.Paragraph style={{ fontSize: 16, color: '#666', marginBottom: 0 }}>
+          Manage users, roadmaps, and modules
+        </Typography.Paragraph>
+      </div>
+      <Card style={{ borderRadius: 16, boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }} bodyStyle={{ padding: '32px' }}>
+        <Tabs defaultActiveKey="users" size="large">
+          <TabPane 
+            tab={
+              <span style={{ fontSize: 15, fontWeight: 500, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>
+                <UserOutlined style={{ marginRight: 8 }} /> Users
+              </span>
+            } 
+            key="users"
+          >
             <Table
               columns={userColumns}
               dataSource={users}
               rowKey="user_id"
               loading={loading}
+              pagination={{ pageSize: 10, showSizeChanger: true }}
+              style={{ marginTop: 16 }}
             />
           </TabPane>
           
-          <TabPane tab={<span><BookOutlined /> Roadmaps & Modules</span>} key="roadmaps">
+          <TabPane 
+            tab={
+              <span style={{ fontSize: 15, fontWeight: 500, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>
+                <BookOutlined style={{ marginRight: 8 }} /> Roadmaps & Modules
+              </span>
+            } 
+            key="roadmaps"
+          >
             <Button
               type="primary"
               icon={<PlusOutlined />}
@@ -329,7 +439,17 @@ const Admin: React.FC = () => {
                 roadmapForm.resetFields()
                 setRoadmapModalVisible(true)
               }}
-              style={{ marginBottom: 16 }}
+              size="large"
+              style={{ 
+                marginBottom: 24, 
+                marginTop: 8,
+                height: 44, 
+                borderRadius: 10, 
+                fontSize: 15,
+                fontWeight: 600,
+                boxShadow: '0 4px 12px rgba(24, 144, 255, 0.3)',
+                fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+              }}
             >
               Create Roadmap
             </Button>
@@ -382,7 +502,11 @@ const Admin: React.FC = () => {
 
       {/* Roadmap Modal */}
       <Modal
-        title={selectedRoadmap ? 'Edit Roadmap' : 'Create Roadmap'}
+        title={
+          <div style={{ fontSize: 20, fontWeight: 600, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>
+            {selectedRoadmap ? '✏️ Edit Roadmap' : '➕ Create Roadmap'}
+          </div>
+        }
         open={roadmapModalVisible}
         onCancel={() => {
           setRoadmapModalVisible(false)
@@ -390,6 +514,7 @@ const Admin: React.FC = () => {
           roadmapForm.resetFields()
         }}
         footer={null}
+        width={600}
       >
         <Form
           form={roadmapForm}
@@ -397,30 +522,51 @@ const Admin: React.FC = () => {
           onFinish={selectedRoadmap ? handleUpdateRoadmap : handleCreateRoadmap}
         >
           <Form.Item name="title" label="Title" rules={[{ required: true }]}>
-            <Input />
+            <Input size="large" style={{ borderRadius: 8, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }} />
           </Form.Item>
           <Form.Item name="description" label="Description" rules={[{ required: true }]}>
-            <Input.TextArea rows={3} />
+            <Input.TextArea rows={3} style={{ borderRadius: 8, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }} />
           </Form.Item>
           <Form.Item name="image_url" label="Image URL">
-            <Input />
+            <Input size="large" style={{ borderRadius: 8, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }} />
           </Form.Item>
           <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-            <Select>
-              <Select.Option value="frontend">Frontend</Select.Option>
-              <Select.Option value="backend">Backend</Select.Option>
-              <Select.Option value="mobile">Mobile</Select.Option>
-              <Select.Option value="data_science">Data Science</Select.Option>
-              <Select.Option value="devops">DevOps</Select.Option>
-              <Select.Option value="ai">AI/ML</Select.Option>
-              <Select.Option value="other">Other</Select.Option>
+            <Select size="large" style={{ fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>
+              <Select.Option value="Web">🌐 Web</Select.Option>
+              <Select.Option value="Data">📊 Data</Select.Option>
+              <Select.Option value="Mobile">📱 Mobile</Select.Option>
+              <Select.Option value="AI">🤖 AI</Select.Option>
+              <Select.Option value="Cloud">☁️ Cloud</Select.Option>
+              <Select.Option value="Game">🎮 Game</Select.Option>
+              <Select.Option value="Design">🎨 Design</Select.Option>
+              <Select.Option value="Security">🔒 Security</Select.Option>
             </Select>
           </Form.Item>
-          <Form.Item>
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
             <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-              <Button onClick={() => setRoadmapModalVisible(false)}>Cancel</Button>
-              <Button type="primary" htmlType="submit">
-                {selectedRoadmap ? 'Update' : 'Create'}
+              <Button 
+                onClick={() => setRoadmapModalVisible(false)}
+                size="large"
+                style={{ 
+                  borderRadius: 8, 
+                  height: 44,
+                  fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit"
+                size="large"
+                style={{ 
+                  borderRadius: 8, 
+                  height: 44, 
+                  fontWeight: 600,
+                  fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+                }}
+              >
+                {selectedRoadmap ? '✅ Update' : '➕ Create'}
               </Button>
             </Space>
           </Form.Item>
@@ -429,7 +575,11 @@ const Admin: React.FC = () => {
 
       {/* Module Modal */}
       <Modal
-        title={selectedModule ? 'Edit Module' : 'Create Module'}
+        title={
+          <div style={{ fontSize: 20, fontWeight: 600, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>
+            {selectedModule ? '✏️ Edit Module' : '➕ Create Module'}
+          </div>
+        }
         open={moduleModalVisible}
         onCancel={() => {
           setModuleModalVisible(false)
@@ -445,22 +595,42 @@ const Admin: React.FC = () => {
           onFinish={selectedModule ? handleUpdateModule : handleCreateModule}
         >
           <Form.Item name="title" label="Title" rules={[{ required: true }]}>
-            <Input />
+            <Input size="large" style={{ borderRadius: 8, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }} />
           </Form.Item>
           <Form.Item name="description" label="Description">
-            <Input.TextArea rows={2} />
+            <Input.TextArea rows={2} style={{ borderRadius: 8, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }} />
           </Form.Item>
           <Form.Item name="content" label="Content">
-            <Input.TextArea rows={6} />
+            <Input.TextArea rows={6} style={{ borderRadius: 8, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }} />
           </Form.Item>
           <Form.Item name="order_index" label="Order" rules={[{ required: true }]}>
-            <Input type="number" />
+            <Input type="number" size="large" style={{ borderRadius: 8, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }} />
           </Form.Item>
-          <Form.Item>
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
             <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-              <Button onClick={() => setModuleModalVisible(false)}>Cancel</Button>
-              <Button type="primary" htmlType="submit">
-                {selectedModule ? 'Update' : 'Create'}
+              <Button 
+                onClick={() => setModuleModalVisible(false)}
+                size="large"
+                style={{ 
+                  borderRadius: 8, 
+                  height: 44,
+                  fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+                }}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="primary" 
+                htmlType="submit"
+                size="large"
+                style={{ 
+                  borderRadius: 8, 
+                  height: 44, 
+                  fontWeight: 600,
+                  fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+                }}
+              >
+                {selectedModule ? '✅ Update' : '➕ Create'}
               </Button>
             </Space>
           </Form.Item>
