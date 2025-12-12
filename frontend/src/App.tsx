@@ -171,12 +171,43 @@ const App: React.FC = () => {
       </Content>
       <Footer style={{ 
         textAlign: 'center',
-        background: '#001529',
+        background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
         color: 'white',
-        padding: '24px 50px'
+        padding: '48px 60px 32px',
+        borderTop: '4px solid #1890ff'
       }}>
-        <div>SkillSync - Own Your Future By Learning Skills</div>
-        <div style={{ marginTop: 8, opacity: 0.7 }}>©{new Date().getFullYear()} All Rights Reserved</div>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <div style={{ 
+            fontSize: 28, 
+            fontWeight: 700, 
+            marginBottom: 16,
+            background: 'linear-gradient(90deg, #fff, #64b5f6)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text'
+          }}>
+            ⚡ SkillSync
+          </div>
+          <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 24 }}>
+            Own Your Future By Learning Skills
+          </div>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'center', 
+            gap: 40, 
+            marginBottom: 24,
+            flexWrap: 'wrap'
+          }}>
+            <a href="#" style={{ color: 'white', opacity: 0.8, fontSize: 14 }}>About Us</a>
+            <a href="#" style={{ color: 'white', opacity: 0.8, fontSize: 14 }}>Careers</a>
+            <a href="#" style={{ color: 'white', opacity: 0.8, fontSize: 14 }}>Contact</a>
+            <a href="#" style={{ color: 'white', opacity: 0.8, fontSize: 14 }}>Privacy</a>
+            <a href="#" style={{ color: 'white', opacity: 0.8, fontSize: 14 }}>Terms</a>
+          </div>
+          <div style={{ fontSize: 14, opacity: 0.6 }}>
+            ©{new Date().getFullYear()} SkillSync. All Rights Reserved.
+          </div>
+        </div>
       </Footer>
     </Layout>
   )

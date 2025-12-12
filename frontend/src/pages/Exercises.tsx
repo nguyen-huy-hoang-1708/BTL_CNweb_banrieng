@@ -114,78 +114,159 @@ const Exercises: React.FC = () => {
     }
   }
 
+  const behavioral = interviewTips.filter(tip => tip.category === 'Behavioral')
+  const technical = interviewTips.filter(tip => tip.category === 'Technical')
+
   return (
-    <div style={{ padding: '24px', maxWidth: 1200, margin: '0 auto' }}>
-      <div style={{ marginBottom: 32 }}>
-        <Title level={2}>
-          <BulbOutlined style={{ marginRight: 12, color: '#faad14' }} />
-          Những câu hỏi mẹo hay khi đi phỏng vấn bạn cần biết
+    <div style={{ padding: '40px 80px', maxWidth: 1400, margin: '0 auto' }}>
+      <div style={{ marginBottom: 48, textAlign: 'center' }}>
+        <BulbOutlined style={{ fontSize: 64, color: '#faad14', marginBottom: 16 }} />
+        <Title level={1} style={{ fontSize: 42, fontWeight: 700, marginBottom: 16 }}>
+          Những câu hỏi mẹo hay khi đi phỏng vấn
         </Title>
-        <Paragraph style={{ fontSize: 16 }}>
+        <Paragraph style={{ fontSize: 18, color: '#666', maxWidth: 800, margin: '0 auto' }}>
           Tổng hợp các câu hỏi phổ biến nhất trong phỏng vấn kèm theo tips trả lời thông minh
         </Paragraph>
       </div>
 
-      <Row gutter={[16, 16]}>
+      <Row gutter={[24, 24]} style={{ marginBottom: 40 }}>
         <Col xs={24} md={12}>
-          <Card size="small" style={{ background: '#e6f7ff', textAlign: 'center' }}>
-            <StarOutlined style={{ fontSize: 24, color: '#1890ff', marginBottom: 8 }} />
-            <Title level={4} style={{ margin: 0 }}>Behavioral Questions</Title>
-            <Text type="secondary">6 câu hỏi</Text>
+          <Card 
+            size="small" 
+            style={{ 
+              background: 'linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%)',
+              textAlign: 'center',
+              borderRadius: 12,
+              border: '2px solid #1890ff',
+              boxShadow: '0 4px 12px rgba(24,144,255,0.15)'
+            }}
+            bodyStyle={{ padding: 32 }}
+          >
+            <StarOutlined style={{ fontSize: 48, color: '#1890ff', marginBottom: 16 }} />
+            <Title level={2} style={{ margin: 0, fontSize: 28 }}>Behavioral Questions</Title>
+            <Text style={{ fontSize: 18, fontWeight: 600, color: '#1890ff' }}>{behavioral.length} câu hỏi</Text>
           </Card>
         </Col>
         <Col xs={24} md={12}>
-          <Card size="small" style={{ background: '#f6ffed', textAlign: 'center' }}>
-            <CheckCircleOutlined style={{ fontSize: 24, color: '#52c41a', marginBottom: 8 }} />
-            <Title level={4} style={{ margin: 0 }}>Technical Questions</Title>
-            <Text type="secondary">6 câu hỏi</Text>
+          <Card 
+            size="small" 
+            style={{ 
+              background: 'linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%)',
+              textAlign: 'center',
+              borderRadius: 12,
+              border: '2px solid #52c41a',
+              boxShadow: '0 4px 12px rgba(82,196,26,0.15)'
+            }}
+            bodyStyle={{ padding: 32 }}
+          >
+            <CheckCircleOutlined style={{ fontSize: 48, color: '#52c41a', marginBottom: 16 }} />
+            <Title level={2} style={{ margin: 0, fontSize: 28 }}>Technical Questions</Title>
+            <Text style={{ fontSize: 18, fontWeight: 600, color: '#52c41a' }}>{technical.length} câu hỏi</Text>
           </Card>
         </Col>
       </Row>
 
-      <div style={{ marginTop: 32 }}>
-        <Collapse 
-          accordion 
-          bordered={false}
-          style={{ background: 'transparent' }}
-        >
-          {interviewTips.map((tip) => (
-            <Panel
-              key={tip.id}
-              header={
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <Tag color={tip.category === 'Behavioral' ? 'blue' : 'green'}>
-                    {tip.category}
-                  </Tag>
-                  <Tag color={getLevelColor(tip.level)}>{tip.level}</Tag>
-                  <Text strong style={{ flex: 1 }}>{tip.question}</Text>
+      <Row gutter={[32, 32]}>
+        <Col xs={24} lg={12}>
+          <Title level={3} style={{ fontSize: 26, marginBottom: 24 }}>
+            <StarOutlined style={{ color: '#1890ff', marginRight: 8 }} />
+            Behavioral Questions
+          </Title>
+          <Collapse 
+            accordion 
+            bordered={false}
+            style={{ background: 'transparent' }}
+          >
+            {behavioral.map((tip) => (
+              <Panel
+                key={tip.id}
+                header={
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <Tag color="blue" style={{ fontSize: 13, padding: '4px 12px' }}>
+                      {tip.category}
+                    </Tag>
+                    <Tag color={getLevelColor(tip.level)} style={{ fontSize: 13, padding: '4px 12px' }}>
+                      {tip.level}
+                    </Tag>
+                    <Text strong style={{ flex: 1, fontSize: 15 }}>{tip.question}</Text>
+                  </div>
+                }
+                style={{ marginBottom: 16, border: '1px solid #d9d9d9', borderRadius: 12, background: 'white' }}
+              >
+                <div style={{ padding: '16px 0' }}>
+                  <div style={{ marginBottom: 20 }}>
+                    <Text strong style={{ color: '#1890ff', fontSize: 17 }}>💡 Mẹo trả lời:</Text>
+                    <Paragraph style={{ marginTop: 12, fontSize: 16, lineHeight: 1.9, color: '#333' }}>
+                      {tip.tip}
+                    </Paragraph>
+                  </div>
+                  <div>
+                    <Text strong style={{ color: '#52c41a', fontSize: 17 }}>✅ Câu trả lời mẫu:</Text>
+                    <Card 
+                      size="small" 
+                      style={{ marginTop: 12, background: '#fafafa', border: '1px dashed #d9d9d9', borderRadius: 8 }}
+                    >
+                      <Text style={{ fontSize: 15, fontStyle: 'italic', lineHeight: 1.8 }}>
+                        {tip.example}
+                      </Text>
+                    </Card>
+                  </div>
                 </div>
-              }
-              style={{ marginBottom: 16, border: '1px solid #f0f0f0', borderRadius: 8 }}
-            >
-              <div style={{ padding: '12px 0' }}>
-                <div style={{ marginBottom: 16 }}>
-                  <Text strong style={{ color: '#1890ff', fontSize: 16 }}>💡 Mẹo trả lời:</Text>
-                  <Paragraph style={{ marginTop: 8, fontSize: 15, lineHeight: 1.8 }}>
-                    {tip.tip}
-                  </Paragraph>
+              </Panel>
+            ))}
+          </Collapse>
+        </Col>
+
+        <Col xs={24} lg={12}>
+          <Title level={3} style={{ fontSize: 26, marginBottom: 24 }}>
+            <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
+            Technical Questions
+          </Title>
+          <Collapse 
+            accordion 
+            bordered={false}
+            style={{ background: 'transparent' }}
+          >
+            {technical.map((tip) => (
+              <Panel
+                key={tip.id}
+                header={
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                    <Tag color="green" style={{ fontSize: 13, padding: '4px 12px' }}>
+                      {tip.category}
+                    </Tag>
+                    <Tag color={getLevelColor(tip.level)} style={{ fontSize: 13, padding: '4px 12px' }}>
+                      {tip.level}
+                    </Tag>
+                    <Text strong style={{ flex: 1, fontSize: 15 }}>{tip.question}</Text>
+                  </div>
+                }
+                style={{ marginBottom: 16, border: '1px solid #d9d9d9', borderRadius: 12, background: 'white' }}
+              >
+                <div style={{ padding: '16px 0' }}>
+                  <div style={{ marginBottom: 20 }}>
+                    <Text strong style={{ color: '#1890ff', fontSize: 17 }}>💡 Mẹo trả lời:</Text>
+                    <Paragraph style={{ marginTop: 12, fontSize: 16, lineHeight: 1.9, color: '#333' }}>
+                      {tip.tip}
+                    </Paragraph>
+                  </div>
+                  <div>
+                    <Text strong style={{ color: '#52c41a', fontSize: 17 }}>✅ Câu trả lời mẫu:</Text>
+                    <Card 
+                      size="small" 
+                      style={{ marginTop: 12, background: '#fafafa', border: '1px dashed #d9d9d9', borderRadius: 8 }}
+                    >
+                      <Text style={{ fontSize: 15, fontStyle: 'italic', lineHeight: 1.8 }}>
+                        {tip.example}
+                      </Text>
+                    </Card>
+                  </div>
                 </div>
-                <div>
-                  <Text strong style={{ color: '#52c41a', fontSize: 16 }}>✅ Câu trả lời mẫu:</Text>
-                  <Card 
-                    size="small" 
-                    style={{ marginTop: 8, background: '#fafafa', border: '1px dashed #d9d9d9' }}
-                  >
-                    <Text style={{ fontSize: 14, fontStyle: 'italic' }}>
-                      {tip.example}
-                    </Text>
-                  </Card>
-                </div>
-              </div>
-            </Panel>
-          ))}
-        </Collapse>
-      </div>
+              </Panel>
+            ))}
+          </Collapse>
+        </Col>
+      </Row>
     </div>
   )
 }

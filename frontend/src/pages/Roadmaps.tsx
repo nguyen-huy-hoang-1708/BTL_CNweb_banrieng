@@ -81,52 +81,121 @@ const Roadmaps: React.FC = () => {
   if (error) return <Alert type="error" message={error} showIcon style={{ marginBottom: 16 }} />
 
   return (
-    <div>
-      <div style={{ marginBottom: 24 }}>
-        <Title level={2}>Learning Roadmaps</Title>
-        <Paragraph>Choose your learning path and start your journey</Paragraph>
+    <div style={{ padding: '40px 60px', maxWidth: 1400, margin: '0 auto' }}>
+      <div style={{ marginBottom: 40, textAlign: 'center' }}>
+        <Title level={1} style={{ fontSize: 42, fontWeight: 700, marginBottom: 12 }}>
+          Explore Learning Paths
+        </Title>
+        <Paragraph style={{ fontSize: 18, color: '#666' }}>
+          Choose your journey and master in-demand skills
+        </Paragraph>
       </div>
 
       {items.length === 0 ? (
         <Empty description="No roadmaps available" />
       ) : (
-        <Row gutter={[16, 16]}>
+        <Row gutter={[32, 32]}>
           {items.map((item) => (
-            <Col xs={24} sm={12} lg={8} key={item.roadmap_id}>
+            <Col xs={24} sm={12} lg={8} xl={6} key={item.roadmap_id}>
               <Card
                 hoverable
+                style={{
+                  borderRadius: 16,
+                  overflow: 'hidden',
+                  border: '1px solid #f0f0f0',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+                  transition: 'all 0.3s',
+                  height: '100%'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-8px)'
+                  e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.15)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)'
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+                }}
                 cover={
                   item.image_url ? (
-                    <img
-                      alt={item.title}
-                      src={item.image_url}
-                      style={{ height: 200, objectFit: 'cover', width: '100%' }}
-                      onError={(e) => {
-                        // Fallback to icon if image fails to load
-                        e.currentTarget.style.display = 'none'
-                        e.currentTarget.parentElement!.innerHTML = `<div style="height: 200px; background: #f0f0f0; display: flex; align-items: center; justify-content: center;"><span style="font-size: 48px; color: #1890ff;">📚</span></div>`
-                      }}
-                    />
+                    <div style={{ height: 200, overflow: 'hidden' }}>
+                      <img
+                        alt={item.title}
+                        src={item.image_url}
+                        style={{ height: '100%', width: '100%', objectFit: 'cover' }}
+                        onError={(e) => {
+                          e.currentTarget.style.display = 'none'
+                          e.currentTarget.parentElement!.innerHTML = `<div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center;"><span style="font-size: 64px;">📚</span></div>`
+                        }}
+                      />
+                    </div>
                   ) : (
-                    <div style={{ height: 200, background: '#f0f0f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <BookOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+                    <div style={{ 
+                      height: 200, 
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center' 
+                    }}>
+                      <BookOutlined style={{ fontSize: 64, color: 'white' }} />
                     </div>
                   )
                 }
-                actions={[
-                  <Button type="link" onClick={() => handleViewDetails(item)}>View Details</Button>,
-                ]}
+                bodyStyle={{ padding: '20px', textAlign: 'center' }}
               >
-                <Card.Meta
-                  title={item.title}
-                  description={
-                    <Space direction="vertical" style={{ width: '100%' }}>
-                      <div>{item.description || 'No description available'}</div>
-                      {item.category && <Tag color="blue">{item.category}</Tag>}
-                      {item.status === 'published' && <Tag color="green">Published</Tag>}
-                    </Space>
-                  }
-                />
+                <Title 
+                  level={4} 
+                  style={{ 
+                    marginBottom: 12, 
+                    fontSize: 18,
+                    fontWeight: 600,
+                    fontFamily: "'Segoe UI', 'Roboto', sans-serif",
+                    textAlign: 'center',
+                    minHeight: 50,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  {item.title}
+                </Title>
+                <Paragraph 
+                  ellipsis={{ rows: 2 }} 
+                  style={{ 
+                    color: '#666', 
+                    fontSize: 14, 
+                    marginBottom: 16,
+                    minHeight: 42,
+                    textAlign: 'center'
+                  }}
+                >
+                  {item.description || 'Comprehensive learning path'}
+                </Paragraph>
+                <Space direction="vertical" style={{ width: '100%' }} size={8}>
+                  {item.category && (
+                    <Tag color="blue" style={{ fontSize: 13, padding: '4px 12px', borderRadius: 12 }}>
+                      {item.category}
+                    </Tag>
+                  )}
+                  {item.status === 'published' && (
+                    <Tag color="green" style={{ fontSize: 13, padding: '4px 12px', borderRadius: 12 }}>
+                      Published
+                    </Tag>
+                  )}
+                  <Button 
+                    type="primary" 
+                    block 
+                    style={{ 
+                      marginTop: 8, 
+                      borderRadius: 8,
+                      height: 40,
+                      fontSize: 15,
+                      fontWeight: 600
+                    }}
+                    onClick={() => handleViewDetails(item)}
+                  >
+                    View Course
+                  </Button>
+                </Space>
               </Card>
             </Col>
           ))}

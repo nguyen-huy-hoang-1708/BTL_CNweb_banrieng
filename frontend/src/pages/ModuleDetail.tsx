@@ -132,25 +132,26 @@ const ModuleDetail: React.FC = () => {
   }
 
   return (
-    <div style={{ maxWidth: 1200, margin: '0 auto', padding: '24px' }}>
+    <div style={{ maxWidth: 1400, margin: '0 auto', padding: '40px 80px' }}>
       {/* Header */}
       <Button 
         icon={<ArrowLeftOutlined />} 
         onClick={() => navigate(-1)}
-        style={{ marginBottom: 16 }}
+        style={{ marginBottom: 24, height: 38, fontSize: 14 }}
+        size="middle"
       >
         Quay lại khóa học
       </Button>
 
       {/* Module Info */}
-      <Card style={{ marginBottom: 24 }}>
-        <Space direction="vertical" style={{ width: '100%' }} size="small">
-          <Space>
-            <BookOutlined style={{ fontSize: 24, color: '#1890ff' }} />
-            <Title level={2} style={{ margin: 0 }}>{module.title}</Title>
+      <Card style={{ marginBottom: 32, borderRadius: 12, border: 'none', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
+        <Space direction="vertical" style={{ width: '100%' }} size="large">
+          <Space align="center">
+            <BookOutlined style={{ fontSize: 48, color: '#1890ff' }} />
+            <Title level={1} style={{ margin: 0, fontSize: 36, fontWeight: 700 }}>{module.title}</Title>
           </Space>
           {module.estimated_hours && (
-            <Tag color="purple" style={{ fontSize: 14 }}>
+            <Tag color="purple" style={{ fontSize: 15, padding: '6px 16px', borderRadius: 16 }}>
               ⏱️ Thời lượng: {module.estimated_hours} giờ
             </Tag>
           )}
@@ -160,10 +161,10 @@ const ModuleDetail: React.FC = () => {
       {/* Module Description */}
       {module.description && (
         <Card 
-          title={<Text strong style={{ fontSize: 16 }}>📋 Mô tả bài học</Text>}
-          style={{ marginBottom: 24 }}
+          title={<Text strong style={{ fontSize: 18 }}>📋 Mô tả bài học</Text>}
+          style={{ marginBottom: 32, borderRadius: 12, border: 'none', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}
         >
-          <Paragraph style={{ fontSize: 15, lineHeight: 1.8 }}>
+          <Paragraph style={{ fontSize: 16, lineHeight: 1.9, color: '#333' }}>
             {module.description}
           </Paragraph>
         </Card>
@@ -172,24 +173,24 @@ const ModuleDetail: React.FC = () => {
       {/* Module Content */}
       {module.content && (
         <Card 
-          title={<Text strong style={{ fontSize: 16 }}>📖 Nội dung chi tiết</Text>}
-          style={{ marginBottom: 24 }}
+          title={<Text strong style={{ fontSize: 18 }}>📖 Nội dung chi tiết</Text>}
+          style={{ marginBottom: 32, borderRadius: 12, border: 'none', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}
         >
-          <Paragraph style={{ fontSize: 15, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>
+          <Paragraph style={{ fontSize: 16, lineHeight: 1.9, whiteSpace: 'pre-wrap', color: '#333' }}>
             {module.content}
           </Paragraph>
         </Card>
       )}
 
-      <Divider />
+      <Divider style={{ margin: '48px 0' }} />
 
       {/* Quiz Section */}
       {exercises.length > 0 && (
-        <Card>
+        <Card style={{ borderRadius: 12, border: 'none', boxShadow: '0 2px 12px rgba(0,0,0,0.08)' }}>
           <Space direction="vertical" style={{ width: '100%' }} size="large">
             <div style={{ textAlign: 'center' }}>
-              <Title level={3}>✍️ Bài tập ôn tập</Title>
-              <Paragraph>
+              <Title level={2} style={{ fontSize: 32, fontWeight: 700 }}>✍️ Bài tập ôn tập</Title>
+              <Paragraph style={{ fontSize: 16, color: '#666' }}>
                 Kiểm tra kiến thức của bạn với {exercises.length} câu hỏi trắc nghiệm
               </Paragraph>
               {!showQuiz && (
@@ -197,6 +198,7 @@ const ModuleDetail: React.FC = () => {
                   type="primary" 
                   size="large"
                   onClick={() => setShowQuiz(true)}
+                  style={{ height: 44, padding: '0 32px', fontSize: 16, fontWeight: 600, borderRadius: 8 }}
                 >
                   Bắt đầu ôn tập
                 </Button>
@@ -209,7 +211,7 @@ const ModuleDetail: React.FC = () => {
                   message={`Điểm số hiện tại: ${score}/${exercises.length}`}
                   type="info"
                   showIcon
-                  style={{ marginBottom: 16 }}
+                  style={{ marginBottom: 24, fontSize: 16, borderRadius: 8 }}
                 />
 
                 <Space direction="vertical" style={{ width: '100%' }} size="large">
@@ -224,19 +226,19 @@ const ModuleDetail: React.FC = () => {
                         key={exercise.exercise_id}
                         title={
                           <Space>
-                            <Text strong style={{ fontSize: 16 }}>Câu {index + 1}:</Text>
-                            <Text style={{ fontSize: 16 }}>{exercise.title}</Text>
-                            <Tag color={getDifficultyColor(exercise.difficulty)}>
+                            <Text strong style={{ fontSize: 18 }}>Câu {index + 1}:</Text>
+                            <Text style={{ fontSize: 18 }}>{exercise.title}</Text>
+                            <Tag color={getDifficultyColor(exercise.difficulty)} style={{ fontSize: 14, padding: '4px 12px' }}>
                               {exercise.difficulty}
                             </Tag>
                           </Space>
                         }
-                        style={{ background: '#fafafa' }}
+                        style={{ background: '#fafafa', borderRadius: 12 }}
                       >
                         <Space direction="vertical" size="large" style={{ width: '100%' }}>
                           {/* Question */}
                           <div>
-                            <Text strong style={{ fontSize: 16 }}>
+                            <Text strong style={{ fontSize: 17 }}>
                               {quiz?.question || exercise.description}
                             </Text>
                           </div>
@@ -258,8 +260,8 @@ const ModuleDetail: React.FC = () => {
 
                           {/* Code */}
                           {quiz?.code && (
-                            <Card size="small" style={{ background: '#f5f5f5' }}>
-                              <pre style={{ margin: 0, fontSize: 14, fontFamily: 'monospace' }}>
+                            <Card size="small" style={{ background: '#f5f5f5', borderRadius: 8 }}>
+                              <pre style={{ margin: 0, fontSize: 15, fontFamily: 'monospace' }}>
                                 {quiz.code}
                               </pre>
                             </Card>
@@ -280,10 +282,10 @@ const ModuleDetail: React.FC = () => {
                                     value={choice.id}
                                     style={{
                                       display: 'block',
-                                      padding: '16px',
+                                      padding: '18px',
                                       border: '2px solid',
-                                      borderRadius: 8,
-                                      fontSize: 15,
+                                      borderRadius: 10,
+                                      fontSize: 16,
                                       background: showResult
                                         ? choice.id === quiz.correct_answer
                                           ? '#f6ffed'
@@ -301,13 +303,13 @@ const ModuleDetail: React.FC = () => {
                                     }}
                                   >
                                     <Space size="middle">
-                                      <Text strong style={{ fontSize: 16 }}>{choice.id}.</Text>
-                                      <Text style={{ fontSize: 15 }}>{choice.text}</Text>
+                                      <Text strong style={{ fontSize: 17 }}>{choice.id}.</Text>
+                                      <Text style={{ fontSize: 16 }}>{choice.text}</Text>
                                       {showResult && choice.id === quiz.correct_answer && (
-                                        <CheckCircleFilled style={{ color: '#52c41a', fontSize: 20 }} />
+                                        <CheckCircleFilled style={{ color: '#52c41a', fontSize: 22 }} />
                                       )}
                                       {showResult && choice.id === userAnswer && choice.id !== quiz.correct_answer && (
-                                        <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 20 }} />
+                                        <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 22 }} />
                                       )}
                                     </Space>
                                   </Radio>
@@ -324,6 +326,7 @@ const ModuleDetail: React.FC = () => {
                               onClick={() => handleSubmitAnswer(exercise)}
                               disabled={!userAnswer}
                               block
+                              style={{ height: 44, fontSize: 16, fontWeight: 600, borderRadius: 8 }}
                             >
                               Kiểm tra đáp án
                             </Button>
@@ -333,9 +336,10 @@ const ModuleDetail: React.FC = () => {
                           {showResult && quiz?.explanation && (
                             <Alert
                               message={isCorrect ? '✅ Chính xác!' : '❌ Chưa đúng'}
-                              description={quiz.explanation}
+                              description={<span style={{ fontSize: 15 }}>{quiz.explanation}</span>}
                               type={isCorrect ? 'success' : 'info'}
                               showIcon
+                              style={{ borderRadius: 8 }}
                             />
                           )}
                         </Space>
@@ -346,11 +350,11 @@ const ModuleDetail: React.FC = () => {
 
                 {/* Final Score */}
                 {Object.keys(showResults).length === exercises.length && (
-                  <Card style={{ background: '#f0f5ff', textAlign: 'center' }}>
-                    <Title level={3}>
+                  <Card style={{ background: '#f0f5ff', textAlign: 'center', borderRadius: 12, marginTop: 32 }}>
+                    <Title level={2} style={{ fontSize: 32, fontWeight: 700 }}>
                       🎉 Hoàn thành! Điểm số: {score}/{exercises.length}
                     </Title>
-                    <Space>
+                    <Space size="large">
                       <Button 
                         size="large"
                         onClick={() => {
@@ -359,6 +363,7 @@ const ModuleDetail: React.FC = () => {
                           setShowResults({})
                           setScore(0)
                         }}
+                        style={{ height: 44, padding: '0 28px', fontSize: 16, borderRadius: 8 }}
                       >
                         Làm lại
                       </Button>
@@ -366,6 +371,7 @@ const ModuleDetail: React.FC = () => {
                         type="primary" 
                         size="large"
                         onClick={() => navigate(-1)}
+                        style={{ height: 44, padding: '0 28px', fontSize: 16, fontWeight: 600, borderRadius: 8 }}
                       >
                         Quay lại khóa học
                       </Button>

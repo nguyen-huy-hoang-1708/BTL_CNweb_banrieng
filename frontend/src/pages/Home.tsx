@@ -4,6 +4,8 @@ import { BookOutlined, ReadOutlined, TeamOutlined, SafetyCertificateOutlined, Ro
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
+const { Meta } = Card
+
 const { Title, Paragraph } = Typography
 
 const Home: React.FC = () => {
@@ -140,31 +142,34 @@ const Home: React.FC = () => {
               onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
               >
                 <div style={{
-                  width: '140px',
-                  height: '140px',
+                  width: '160px',
+                  height: '160px',
                   borderRadius: '50%',
                   background: feature.bgColor,
-                  border: `5px solid ${feature.color}`,
+                  border: `6px solid ${feature.color}`,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  margin: '0 auto 24px',
-                  color: feature.color
+                  margin: '0 auto 28px',
+                  color: feature.color,
+                  boxShadow: '0 8px 16px rgba(0,0,0,0.1)'
                 }}>
-                  {feature.icon}
+                  {React.cloneElement(feature.icon, { style: { fontSize: 70 } })}
                 </div>
-                <Title level={4} style={{ 
+                <Title level={3} style={{ 
                   marginBottom: 16,
-                  fontSize: '16px',
+                  fontSize: '20px',
                   fontWeight: 700,
-                  letterSpacing: '1px'
+                  letterSpacing: '0.5px',
+                  fontFamily: '\'Segoe UI\', \'Roboto\', \'Helvetica Neue\', sans-serif'
                 }}>
                   {feature.title}
                 </Title>
                 <Paragraph style={{ 
                   color: '#666',
-                  fontSize: '14px',
-                  lineHeight: 1.6
+                  fontSize: '16px',
+                  lineHeight: 1.8,
+                  fontFamily: '\'Segoe UI\', \'Roboto\', \'Helvetica Neue\', sans-serif'
                 }}>
                   {feature.description}
                 </Paragraph>
@@ -181,28 +186,47 @@ const Home: React.FC = () => {
             <Card
               hoverable
               style={{ 
-                height: '300px',
-                background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
+                height: '400px',
                 border: 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                overflow: 'hidden',
+                borderRadius: '12px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
               }}
+              cover={
+                <div style={{
+                  height: '200px',
+                  background: 'url(https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800) center/cover',
+                  position: 'relative'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(135deg, rgba(23,162,184,0.45) 0%, rgba(19,132,150,0.45) 100%)'
+                  }} />
+                </div>
+              }
               bodyStyle={{
-                height: '100%',
+                height: '200px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
+                background: 'linear-gradient(135deg, #17a2b8 0%, #138496 100%)',
                 color: 'white'
               }}
               onClick={() => navigate('/roadmaps')}
             >
-              <Title level={1} style={{ color: 'white', marginBottom: 16 }}>
+              <Title level={1} style={{ color: 'white', marginBottom: 12, fontSize: '42px', fontFamily: '\'Segoe UI\', \'Roboto\', sans-serif' }}>
                 TRENDING
               </Title>
-              <Title level={3} style={{ color: 'white', fontWeight: 400 }}>
+              <Title level={3} style={{ color: 'white', fontWeight: 400, fontSize: '24px', fontFamily: '\'Segoe UI\', \'Roboto\', sans-serif' }}>
                 COURSES
               </Title>
-              <Paragraph style={{ color: 'white', marginTop: 16, opacity: 0.9 }}>
+              <Paragraph style={{ color: 'white', marginTop: 16, opacity: 0.95, fontSize: '16px' }}>
                 {stats.roadmaps}+ Learning Paths Available
               </Paragraph>
             </Card>
@@ -211,28 +235,47 @@ const Home: React.FC = () => {
             <Card
               hoverable
               style={{ 
-                height: '300px',
-                background: 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)',
+                height: '400px',
                 border: 'none',
-                cursor: 'pointer'
+                cursor: 'pointer',
+                overflow: 'hidden',
+                borderRadius: '12px',
+                boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
               }}
+              cover={
+                <div style={{
+                  height: '200px',
+                  background: 'url(https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800) center/cover',
+                  position: 'relative'
+                }}>
+                  <div style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    background: 'linear-gradient(135deg, rgba(255,193,7,0.45) 0%, rgba(255,152,0,0.45) 100%)'
+                  }} />
+                </div>
+              }
               bodyStyle={{
-                height: '100%',
+                height: '200px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
+                background: 'linear-gradient(135deg, #ffc107 0%, #ff9800 100%)',
                 color: 'white'
               }}
               onClick={() => navigate('/exercises')}
             >
-              <Title level={1} style={{ color: 'white', marginBottom: 16 }}>
+              <Title level={1} style={{ color: 'white', marginBottom: 12, fontSize: '42px', fontFamily: '\'Segoe UI\', \'Roboto\', sans-serif' }}>
                 NEW
               </Title>
-              <Title level={3} style={{ color: 'white', fontWeight: 400 }}>
+              <Title level={3} style={{ color: 'white', fontWeight: 400, fontSize: '24px', fontFamily: '\'Segoe UI\', \'Roboto\', sans-serif' }}>
                 CHALLENGES
               </Title>
-              <Paragraph style={{ color: 'white', marginTop: 16, opacity: 0.9 }}>
+              <Paragraph style={{ color: 'white', marginTop: 16, opacity: 0.95, fontSize: '16px' }}>
                 {stats.exercises}+ Coding Exercises
               </Paragraph>
             </Card>

@@ -107,46 +107,188 @@ const Calendar: React.FC = () => {
     .slice(0, 5)
 
   return (
-    <div>
-      <div style={{ marginBottom: 24 }}>
-        <Title level={2}>Learning Calendar</Title>
-        <Paragraph>Schedule and track your learning events</Paragraph>
-      </div>
+    <div style={{ display: 'flex', height: 'calc(100vh - 128px)', background: '#fff' }}>
+      {/* Left Sidebar - Mini Calendar & Upcoming Events */}
+      <div style={{ 
+        width: 320, 
+        background: 'white', 
+        borderRight: '1px solid #e8e8e8',
+        padding: '24px 16px',
+        overflowY: 'auto'
+      }}>
+        <div style={{ marginBottom: 32 }}>
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />} 
+            size="large"
+            block
+            onClick={() => setModalVisible(true)}
+            style={{ height: 48, fontSize: 16, fontWeight: 600, borderRadius: 24, marginBottom: 24 }}
+          >
+            Tạo sự kiện
+          </Button>
+        </div>
 
-      <Space direction="vertical" size="large" style={{ width: '100%' }}>
-        <Card
-          extra={
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => setModalVisible(true)}>
-              Tạo sự kiện
-            </Button>
-          }
+        {/* Mini Calendar */}
+        <Card 
+          size="small" 
+          style={{ marginBottom: 24, border: 'none', background: '#fafafa' }}
+          bodyStyle={{ padding: 12 }}
         >
-          <AntCalendar cellRender={dateCellRender} onSelect={(date) => setSelectedDate(date)} />
+          <AntCalendar 
+            fullscreen={false} 
+            onSelect={(date) => setSelectedDate(date)}
+            headerRender={({ value, onChange }) => {
+              const month = value.format('MMMM')
+              const year = value.format('YYYY')
+              return (
+                <div style={{ padding: '12px 8px', textAlign: 'center' }}>
+                  <Text strong style={{ fontSize: 16 }}>{month} {year}</Text>
+                </div>
+              )
+            }}
+          />
         </Card>
 
+        {/* Upcoming Events List */}
         {upcomingEvents.length > 0 && (
-          <Card title={<><ClockCircleOutlined /> Upcoming Events</>}>
+          <div>
+            <Title level={5} style={{ fontSize: 16, marginBottom: 16 }}>
+              <ClockCircleOutlined style={{ marginRight: 8, color: '#1890ff' }} />
+              Sự kiện sắp tới
+            </Title>
             <List
+              size="small"
               dataSource={upcomingEvents}
               renderItem={(item) => (
-                <List.Item>
-                  <List.Item.Meta
-                    title={item.title}
-                    description={`${dayjs(item.start_utc).format('MMM DD, YYYY HH:mm')} - ${dayjs(item.end_utc).format('HH:mm')}`}
-                  />
-                  <Badge 
-                    status={item.status === 'planned' ? 'processing' : 'default'} 
-                    text={item.status || 'planned'} 
-                  />
-                </List.Item>
+                <Card 
+                  size="small" 
+                  style={{ 
+                    marginBottom: 12, 
+                    borderRadius: 8,
+                    borderLeft: `4px solid ${item.status === 'done' ? '#52c41a' : '#1890ff'}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                  bodyStyle={{ padding: 12 }}
+                  hoverable
+                >
+                  <div>
+                    <Text strong style={{ fontSize: 14, display: 'block', marginBottom: 4 }}>
+                      {item.title}
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 12 }}>
+                      <ClockCircleOutlined style={{ marginRight: 4 }} />
+                      {dayjs(item.start_utc).format('MMM DD, HH:mm')}
+                    </Text>
+                    {item.reminder_minutes && (
+                      <div style={{ marginTop: 4 }}>
+                        <Text type="secondary" style={{ fontSize: 11 }}>
+                          <BellOutlined style={{ marginRight: 4, color: '#faad14' }} />
+                          Nhắc {item.reminder_minutes}p trước
+                        </Text>
+                      </div>
+                    )}
+                  </div>
+                </Card>
               )}
             />
-          </Card>
+          </div>
         )}
-      </Space>
+      </div>
+
+      {/* Main Calendar Area */}
+      <div style={{ 
+        flex: 1, 
+        padding: '32px 40px',
+        overflowY: 'auto',
+        background: '#fafafa'
+      }}>
+        <div style={{ marginBottom: 24 }}>
+          <Title level={2} style={{ fontSize: 32, fontWeight: 700, marginBottom: 8 }}>
+            <CalendarOutlined style={{ marginRight: 12, color: '#1890ff' }} />
+            Lịch học tập
+          </Title>
+          <Paragraph style={{ fontSize: 16, color: '#666' }}>
+            {dayjs().format('dddd, MMMM DD, YYYY')}
+          </Paragraph>
+        </div>
+
+        <Card style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+          <AntCalendar 
+            cellRender={dateCellRender} 
+            onSelect={(date) => setSelectedDate(date)}
+            headerRender={({ value, type, onChange, onTypeChange }) => {
+              const month = value.month()
+              const year = value.year()
+              const monthOptions = []
+              const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+              for (let i = 0; i < 12; i++) {
+                monthOptions.push(
+                  <Select.Option key={i} value={i}>
+                    {months[i]}
+                  </Select.Option>
+                )
+              }
+
+              const yearOptions = []
+              for (let i = year - 10; i < year + 10; i++) {
+                yearOptions.push(
+                  <Select.Option key={i} value={i}>
+                    {i}
+                  </Select.Option>
+                )
+              }
+
+              return (
+                <div style={{ padding: '16px 24px', borderBottom: '1px solid #f0f0f0' }}>
+                  <Space size="middle">
+                    <Select
+                      size="large"
+                      value={month}
+                      onChange={(newMonth) => {
+                        const now = value.clone().month(newMonth)
+                        onChange(now)
+                      }}
+                      style={{ width: 120 }}
+                    >
+                      {monthOptions}
+                    </Select>
+                    <Select
+                      size="large"
+                      value={year}
+                      onChange={(newYear) => {
+                        const now = value.clone().year(newYear)
+                        onChange(now)
+                      }}
+                      style={{ width: 100 }}
+                    >
+                      {yearOptions}
+                    </Select>
+                    <Button
+                      onClick={() => {
+                        const now = dayjs()
+                        onChange(now)
+                      }}
+                    >
+                      Hôm nay
+                    </Button>
+                  </Space>
+                </div>
+              )
+            }}
+          />
+        </Card>
+      </div>
 
       <Modal
-        title="Tạo sự kiện học tập"
+        title={
+          <Space>
+            <CalendarOutlined style={{ color: '#1890ff', fontSize: 20 }} />
+            <span style={{ fontSize: 18, fontWeight: 600 }}>Tạo sự kiện học tập</span>
+          </Space>
+        }
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false)
@@ -155,17 +297,18 @@ const Calendar: React.FC = () => {
         footer={null}
         width={600}
       >
-        <Form form={form} layout="vertical" onFinish={onCreateEvent}>
+        <Form form={form} layout="vertical" onFinish={onCreateEvent} style={{ marginTop: 24 }}>
           <Form.Item name="title" label="Tiêu đề" rules={[{ required: true, message: 'Vui lòng nhập tiêu đề!' }]}>
-            <Input placeholder="Ví dụ: Học React Hooks" />
+            <Input size="large" placeholder="Ví dụ: Học React Hooks" />
           </Form.Item>
 
           <Form.Item name="description" label="Mô tả">
-            <Input.TextArea rows={3} placeholder="Mô tả chi tiết về buổi học..." />
+            <Input.TextArea size="large" rows={3} placeholder="Mô tả chi tiết về buổi học..." />
           </Form.Item>
 
           <Form.Item name="module_id" label="Bài học liên quan">
             <Select
+              size="large"
               placeholder="Chọn bài học (tùy chọn)"
               allowClear
               showSearch
@@ -185,6 +328,7 @@ const Calendar: React.FC = () => {
             rules={[{ required: true, message: 'Vui lòng chọn thời gian!' }]}
           >
             <DatePicker 
+              size="large"
               showTime 
               format="DD/MM/YYYY HH:mm"
               style={{ width: '100%' }}
@@ -198,6 +342,7 @@ const Calendar: React.FC = () => {
             rules={[{ required: true, message: 'Vui lòng chọn thời gian!' }]}
           >
             <DatePicker 
+              size="large"
               showTime 
               format="DD/MM/YYYY HH:mm"
               style={{ width: '100%' }}
@@ -207,41 +352,32 @@ const Calendar: React.FC = () => {
 
           <Form.Item 
             name="reminder_minutes" 
-            label={<><BellOutlined /> Nhắc nhở trước (phút)</>}
+            label={<><BellOutlined style={{ color: '#faad14' }} /> Nhắc nhở trước (phút)</>}
             initialValue={15}
           >
-            <Select>
-              <Select.Option value={5}>5 phút trước</Select.Option>
-              <Select.Option value={15}>15 phút trước</Select.Option>
-              <Select.Option value={30}>30 phút trước</Select.Option>
-              <Select.Option value={60}>1 giờ trước</Select.Option>
-              <Select.Option value={120}>2 giờ trước</Select.Option>
-              <Select.Option value={1440}>1 ngày trước</Select.Option>
+            <Select size="large">
+              <Select.Option value={5}>⏰ 5 phút trước</Select.Option>
+              <Select.Option value={15}>⏰ 15 phút trước</Select.Option>
+              <Select.Option value={30}>⏰ 30 phút trước</Select.Option>
+              <Select.Option value={60}>⏰ 1 giờ trước</Select.Option>
+              <Select.Option value={120}>⏰ 2 giờ trước</Select.Option>
+              <Select.Option value={1440}>⏰ 1 ngày trước</Select.Option>
             </Select>
           </Form.Item>
 
-          <Form.Item>
-            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-              <Button onClick={() => setModalVisible(false)}>Hủy</Button>
-              <Button type="primary" htmlType="submit">
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }} size="middle">
+              <Button size="large" onClick={() => setModalVisible(false)} style={{ height: 44, padding: '0 24px' }}>
+                Hủy
+              </Button>
+              <Button type="primary" htmlType="submit" size="large" style={{ height: 44, padding: '0 32px', fontWeight: 600 }}>
                 Tạo sự kiện
               </Button>
             </Space>
           </Form.Item>
         </Form>
       </Modal>
-      {/* Floating action button for mobile/desktop discoverability */}
-      <div style={{ position: 'fixed', right: 24, bottom: 24, zIndex: 1200 }}>
-        <Button
-          type="primary"
-          shape="circle"
-          size="large"
-          icon={<PlusOutlined />}
-          onClick={() => setModalVisible(true)}
-          title="Tạo sự kiện"
-        />
-      </div>
-</div>
+    </div>
   )
   }
 
