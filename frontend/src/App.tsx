@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import { Layout, Menu, Button, Dropdown } from 'antd'
+import { Layout, Menu, Button, Dropdown, Input } from 'antd'
 import { Link, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
-import { UserOutlined, LogoutOutlined, DashboardOutlined, InfoCircleOutlined, SettingOutlined } from '@ant-design/icons'
+import { UserOutlined, LogoutOutlined, DashboardOutlined, InfoCircleOutlined, SettingOutlined, SearchOutlined, ShoppingCartOutlined, GlobalOutlined } from '@ant-design/icons'
 import Home from './pages/Home'
+import Courses from './pages/Courses'
 import Roadmaps from './pages/Roadmaps'
 import ModuleDetail from './pages/ModuleDetail'
 import Login from './pages/Login'
@@ -15,7 +16,11 @@ import Calendar from './pages/Calendar'
 import Progress from './pages/Progress'
 import Certificates from './pages/Certificates'
 import Interviews from './pages/Interviews'
+import Business from './pages/Business'
+import Teach from './pages/Teach'
 import NotificationBell from './components/NotificationBell'
+import SearchCourses from './components/SearchCourses'
+import CartDropdown from './components/CartDropdown'
 
 const { Header, Content, Footer } = Layout
 
@@ -92,69 +97,159 @@ const App: React.FC = () => {
   return (
     <Layout style={{ minHeight: '100vh', background: '#fff' }}>
       <Header style={{ 
-        background: 'rgba(255, 255, 255, 0.95)', 
-        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-        padding: '0 20px',
+        background: '#fff', 
+        boxShadow: '0 2px 4px rgba(0,0,0,0.08)',
+        padding: '0 24px',
         display: 'flex',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        gap: 24,
         position: 'sticky',
         top: 0,
         width: '100%',
-        zIndex: 1000
+        zIndex: 1000,
+        height: 64,
+        borderBottom: '1px solid #e8e8e8'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', flex: '1 1 auto', minWidth: 0, marginRight: 16 }}>
-          <div style={{ 
-            fontSize: 18, 
-            fontWeight: 700, 
-            color: '#1890ff',
-            marginRight: 16,
-            whiteSpace: 'nowrap',
-            flexShrink: 0
-          }}>⚡ SkillSync</div>
-          <Menu 
-            mode="horizontal" 
-            selectedKeys={[location.pathname]}
+        {/* Logo */}
+        <Link to="/" style={{ 
+          fontSize: 28, 
+          fontWeight: 800, 
+          color: '#a435f0',
+          whiteSpace: 'nowrap',
+          textDecoration: 'none',
+          fontFamily: "'Poppins', 'Segoe UI', 'Roboto', sans-serif",
+          letterSpacing: '-0.5px'
+        }}>
+          ⚡ SkillSync
+        </Link>
+        
+        {/* Explore Dropdown - Udemy style */}
+        <Dropdown
+          menu={{
+            items: [
+              { key: 'courses', label: <Link to="/courses">Courses</Link> },
+              { key: 'exercises', label: <Link to="/exercises">Exercises</Link> },
+              { key: 'certificates', label: <Link to="/certificates">Certificates</Link> },
+            ]
+          }}
+          placement="bottomLeft"
+        >
+          <Button 
+            type="text" 
             style={{ 
-              border: 'none', 
-              background: 'transparent', 
-              flex: '1 1 auto', 
-              minWidth: 0,
-              fontSize: 14
+              fontSize: 16,
+              fontWeight: 700,
+              color: '#1c1d1f',
+              height: 42,
+              fontFamily: "'Poppins', 'Segoe UI', 'Roboto', sans-serif"
             }}
-            items={[
-              { key: '/', label: <Link to="/">HOME</Link> },
-              { key: '/roadmaps', label: <Link to="/roadmaps">COURSES</Link> },
-              { key: '/exercises', label: <Link to="/exercises">EXERCISES</Link> },
-              { key: '/certificates', label: <Link to="/certificates">CERTIFICATES</Link> },
-              { key: '/interviews', label: <Link to="/interviews">INTERVIEWS</Link> },
-              { key: '/calendar', label: <Link to="/calendar">CALENDAR</Link> },
-            ]}
-          />
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-          {/* Always show NotificationBell for testing - TODO: Remove in production */}
+          >
+            Explore
+          </Button>
+        </Dropdown>
+
+        {/* Search Bar - Udemy style */}
+        <SearchCourses />
+
+        {/* Right Side Items */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginLeft: 'auto' }}>
+          {/* Business Link */}
+          <Button 
+            type="text"
+            onClick={() => navigate('/business')}
+            style={{ 
+              fontSize: 15,
+              color: '#1c1d1f',
+              fontWeight: 600,
+              fontFamily: "'Poppins', 'Segoe UI', 'Roboto', sans-serif"
+            }}
+          >
+            SkillSync Business
+          </Button>
+
+          {/* Teach Link */}
+          <Button 
+            type="text"
+            onClick={() => navigate('/teach')}
+            style={{ 
+              fontSize: 15,
+              color: '#1c1d1f',
+              fontWeight: 600,
+              fontFamily: "'Poppins', 'Segoe UI', 'Roboto', sans-serif"
+            }}
+          >
+            Teach on SkillSync
+          </Button>
+
+          {/* Shopping Cart Dropdown */}
+          <CartDropdown />
+
+          {/* Notification Bell */}
           <NotificationBell />
+
+          {/* User Account */}
           {isLoggedIn ? (
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-              <Button type="primary" icon={<UserOutlined />}>
+              <Button 
+                icon={<UserOutlined />}
+                style={{ 
+                  borderRadius: 50,
+                  height: 42,
+                  paddingLeft: 18,
+                  paddingRight: 18,
+                  fontFamily: "'Poppins', 'Segoe UI', 'Roboto', sans-serif",
+                  fontWeight: 600,
+                  fontSize: 15
+                }}
+              >
                 Account
               </Button>
             </Dropdown>
           ) : (
-            <Button 
-              type="primary" 
-              icon={<UserOutlined />} 
-              onClick={() => navigate('/login')}
-            >
-              SIGN IN/SIGN UP
-            </Button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Button 
+                onClick={() => navigate('/login')}
+                style={{ 
+                  height: 42,
+                  borderRadius: 6,
+                  border: '1px solid #1c1d1f',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  fontFamily: "'Poppins', 'Segoe UI', 'Roboto', sans-serif"
+                }}
+              >
+                Log in
+              </Button>
+              <Button 
+                type="primary"
+                onClick={() => navigate('/register')}
+                style={{ 
+                  height: 42,
+                  borderRadius: 6,
+                  background: '#1c1d1f',
+                  borderColor: '#1c1d1f',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  fontFamily: "'Poppins', 'Segoe UI', 'Roboto', sans-serif"
+                }}
+              >
+                Sign up
+              </Button>
+            </div>
           )}
+
+          {/* Language Globe */}
+          <Button 
+            type="text" 
+            icon={<GlobalOutlined style={{ fontSize: 20 }} />}
+            style={{ padding: '4px 8px' }}
+          />
         </div>
       </Header>
       <Content style={{ padding: 0, minHeight: 'calc(100vh - 128px)' }}>
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/courses" element={<Courses />} />
           <Route path="/roadmaps" element={<Roadmaps />} />
           <Route path="/roadmaps/:roadmapId/modules/:moduleId" element={<ModuleDetail />} />
           <Route path="/login" element={<Login />} />
@@ -167,45 +262,108 @@ const App: React.FC = () => {
           <Route path="/progress" element={<Progress />} />
           <Route path="/certificates" element={<Certificates />} />
           <Route path="/interviews" element={<Interviews />} />
+          <Route path="/business" element={<Business />} />
+          <Route path="/teach" element={<Teach />} />
         </Routes>
       </Content>
       <Footer style={{ 
-        textAlign: 'center',
-        background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-        color: 'white',
-        padding: '48px 60px 32px',
-        borderTop: '4px solid #1890ff'
+        background: '#1c1d1f',
+        color: '#fff',
+        padding: '40px 24px 24px',
+        marginTop: 'auto'
       }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+        <div style={{ maxWidth: 1340, margin: '0 auto' }}>
+          {/* Top Section with Columns */}
           <div style={{ 
-            fontSize: 28, 
-            fontWeight: 700, 
-            marginBottom: 16,
-            background: 'linear-gradient(90deg, #fff, #64b5f6)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-            backgroundClip: 'text'
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 40,
+            marginBottom: 40,
+            paddingBottom: 32,
+            borderBottom: '1px solid #3e4143'
           }}>
-            ⚡ SkillSync
+            {/* Column 1 */}
+            <div>
+              <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: '#fff', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Explore top skills and certifications</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Web Development</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Data Science</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Machine Learning</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Mobile Development</a>
+              </div>
+            </div>
+
+            {/* Column 2 */}
+            <div>
+              <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: '#fff', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>IT Certifications</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>AWS Certified</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Azure Fundamentals</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Kubernetes</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Docker</a>
+              </div>
+            </div>
+
+            {/* Column 3 */}
+            <div>
+              <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: '#fff', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>SkillSync for Business</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>SkillSync Business</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Teach on SkillSync</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Get the app</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>About us</a>
+              </div>
+            </div>
+
+            {/* Column 4 */}
+            <div>
+              <h4 style={{ fontSize: 14, fontWeight: 700, marginBottom: 16, color: '#fff', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Legal & Accessibility</h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Privacy policy</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Terms</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Sitemap</a>
+                <a href="#" style={{ color: '#fff', fontSize: 13, opacity: 0.8, textDecoration: 'none', fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Accessibility</a>
+              </div>
+            </div>
           </div>
-          <div style={{ fontSize: 16, opacity: 0.9, marginBottom: 24 }}>
-            Own Your Future By Learning Skills
-          </div>
+
+          {/* Bottom Section */}
           <div style={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            gap: 40, 
-            marginBottom: 24,
-            flexWrap: 'wrap'
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: 16
           }}>
-            <a href="#" style={{ color: 'white', opacity: 0.8, fontSize: 14 }}>About Us</a>
-            <a href="#" style={{ color: 'white', opacity: 0.8, fontSize: 14 }}>Careers</a>
-            <a href="#" style={{ color: 'white', opacity: 0.8, fontSize: 14 }}>Contact</a>
-            <a href="#" style={{ color: 'white', opacity: 0.8, fontSize: 14 }}>Privacy</a>
-            <a href="#" style={{ color: 'white', opacity: 0.8, fontSize: 14 }}>Terms</a>
-          </div>
-          <div style={{ fontSize: 14, opacity: 0.6 }}>
-            ©{new Date().getFullYear()} SkillSync. All Rights Reserved.
+            <div style={{ 
+              fontSize: 24,
+              fontWeight: 700,
+              color: '#fff',
+              fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+            }}>
+              ⚡ SkillSync
+            </div>
+            <div style={{ 
+              fontSize: 12,
+              color: '#fff',
+              opacity: 0.7,
+              fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+            }}>
+              © {new Date().getFullYear()} SkillSync, Inc.
+            </div>
+            <Button
+              icon={<GlobalOutlined />}
+              style={{
+                background: 'transparent',
+                border: '1px solid #fff',
+                color: '#fff',
+                borderRadius: 4,
+                height: 40,
+                fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+              }}
+            >
+              English
+            </Button>
           </div>
         </div>
       </Footer>

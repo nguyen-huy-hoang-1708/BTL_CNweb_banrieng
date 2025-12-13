@@ -24,7 +24,7 @@ type Module = {
   estimated_hours?: number
 }
 
-const Roadmaps: React.FC = () => {
+const Courses: React.FC = () => {
   const navigate = useNavigate()
   const [items, setItems] = useState<Roadmap[]>([])
   const [loading, setLoading] = useState(false)
@@ -46,7 +46,7 @@ const Roadmaps: React.FC = () => {
         setItems(Array.isArray(data) ? data : [])
       })
       .catch((err) => {
-        setError(err.message || 'Failed to load roadmaps')
+        setError(err.message || 'Failed to load courses')
         setItems([])
       })
       .finally(() => setLoading(false))
@@ -63,14 +63,14 @@ const Roadmaps: React.FC = () => {
       
       setModalVisible(true)
     } catch (err: any) {
-      message.error('Failed to load roadmap details')
+      message.error('Failed to load course details')
     }
   }
 
   const handleEnroll = async (roadmapId: string) => {
     try {
       await api.post(`/api/roadmaps/${roadmapId}/enroll`)
-      message.success('Successfully enrolled in roadmap!')
+      message.success('Successfully enrolled in course!')
       setModalVisible(false)
       // Trigger cart update by dispatching custom event
       window.dispatchEvent(new Event('courseEnrolled'))
@@ -86,15 +86,15 @@ const Roadmaps: React.FC = () => {
     <div style={{ padding: '40px 60px', maxWidth: 1400, margin: '0 auto' }}>
       <div style={{ marginBottom: 40, textAlign: 'center' }}>
         <Title level={1} style={{ fontSize: 42, fontWeight: 700, marginBottom: 12 }}>
-          Explore Learning Paths
+          All Courses
         </Title>
         <Paragraph style={{ fontSize: 18, color: '#666' }}>
-          Choose your journey and master in-demand skills
+          Explore our comprehensive collection of online courses
         </Paragraph>
       </div>
 
       {items.length === 0 ? (
-        <Empty description="No roadmaps available" />
+        <Empty description="No courses available" />
       ) : (
         <Row gutter={[32, 32]}>
           {items.map((item) => (
@@ -170,7 +170,7 @@ const Roadmaps: React.FC = () => {
                     textAlign: 'center'
                   }}
                 >
-                  {item.description || 'Comprehensive learning path'}
+                  {item.description || 'Comprehensive online course'}
                 </Paragraph>
                 <Space direction="vertical" style={{ width: '100%' }} size={8}>
                   {item.category && (
@@ -216,7 +216,7 @@ const Roadmaps: React.FC = () => {
         onCancel={() => setModalVisible(false)}
         footer={[
           <Button key="cancel" onClick={() => setModalVisible(false)}>
-            Đóng
+            Close
           </Button>,
           <Button
             key="enroll"
@@ -224,7 +224,7 @@ const Roadmaps: React.FC = () => {
             icon={<CheckCircleOutlined />}
             onClick={() => selectedRoadmap && handleEnroll(selectedRoadmap.roadmap_id)}
           >
-            Đăng ký học
+            Enroll Now
           </Button>,
         ]}
         width={800}
@@ -234,10 +234,10 @@ const Roadmaps: React.FC = () => {
             <Paragraph style={{ fontSize: 15 }}>{selectedRoadmap.description}</Paragraph>
 
             <div>
-              <Title level={4}>📚 Danh sách bài học ({modules.length} bài)</Title>
+              <Title level={4}>📚 Course Modules ({modules.length} modules)</Title>
               
               {modules.length === 0 ? (
-                <Empty description="Chưa có bài học nào" />
+                <Empty description="No modules available yet" />
               ) : (
                 <List
                   dataSource={modules}
@@ -290,12 +290,12 @@ const Roadmaps: React.FC = () => {
                         }
                         description={
                           <Text style={{ fontSize: 14 }}>
-                            {module.description || 'Nội dung chi tiết của bài học'}
+                            {module.description || 'Detailed module content'}
                           </Text>
                         }
                       />
                       <Button type="link" icon={<ArrowRightOutlined />}>
-                        Học ngay
+                        Start Learning
                       </Button>
                     </List.Item>
                   )}
@@ -309,4 +309,4 @@ const Roadmaps: React.FC = () => {
   )
 }
 
-export default Roadmaps
+export default Courses
