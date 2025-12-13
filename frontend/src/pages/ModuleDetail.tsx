@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Card, Button, Spin, Alert, Typography, Space, Tag, Divider, Radio, message, Row, Col } from 'antd'
-import { ArrowLeftOutlined, CheckCircleFilled, CloseCircleOutlined, BookOutlined } from '@ant-design/icons'
+import { Card, Button, Spin, Alert, Typography, Space, Tag, Divider, message } from 'antd'
+import { ArrowLeftOutlined, BookOutlined } from '@ant-design/icons'
 import api from '../services/api'
 
 const { Title, Paragraph, Text } = Typography
@@ -36,10 +36,6 @@ const ModuleDetail: React.FC = () => {
   const [module, setModule] = useState<Module | null>(null)
   const [exercises, setExercises] = useState<Exercise[]>([])
   const [loading, setLoading] = useState(true)
-  const [showQuiz, setShowQuiz] = useState(false)
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({})
-  const [showResults, setShowResults] = useState<Record<string, boolean>>({})
-  const [score, setScore] = useState(0)
 
   useEffect(() => {
     loadModuleData()
@@ -63,52 +59,6 @@ const ModuleDetail: React.FC = () => {
       message.error('Không thể tải nội dung bài học')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleAnswerSelect = (exerciseId: string, answerId: string) => {
-    setSelectedAnswers(prev => ({ ...prev, [exerciseId]: answerId }))
-  }
-
-  const handleSubmitAnswer = (exercise: Exercise) => {
-    const userAnswer = selectedAnswers[exercise.exercise_id]
-    const correctAnswer = exercise.examples?.correct_answer
-
-    if (!userAnswer) {
-      message.warning('Vui lòng chọn đáp án!')
-      return
-    }
-
-    setShowResults(prev => ({ ...prev, [exercise.exercise_id]: true }))
-
-    if (userAnswer === correctAnswer) {
-      setScore(prev => prev + 1)
-      message.success('Chính xác! 🎉')
-    } else {
-      message.error('Sai rồi! Xem giải thích bên dưới.')
-    }
-  }
-
-  const calculateFinalScore = () => {
-    const total = exercises.length
-    const answered = Object.keys(showResults).length
-    if (answered === total) {
-      message.success(`Bạn đã hoàn thành! Điểm: ${score}/${total}`)
-    }
-  }
-
-  useEffect(() => {
-    if (showQuiz && Object.keys(showResults).length > 0) {
-      calculateFinalScore()
-    }
-  }, [showResults])
-
-  const getDifficultyColor = (difficulty?: string) => {
-    switch (difficulty) {
-      case 'easy': return 'green'
-      case 'medium': return 'orange'
-      case 'hard': return 'red'
-      default: return 'blue'
     }
   }
 
@@ -191,195 +141,17 @@ const ModuleDetail: React.FC = () => {
             <div style={{ textAlign: 'center' }}>
               <Title level={2} style={{ fontSize: 32, fontWeight: 700 }}>✍️ Bài tập ôn tập</Title>
               <Paragraph style={{ fontSize: 16, color: '#666' }}>
-                Kiểm tra kiến thức của bạn với {exercises.length} câu hỏi trắc nghiệm
+                Kiểm tra kiến thức của bạn với 5 câu hỏi trắc nghiệm
               </Paragraph>
-              {!showQuiz && (
-                <Button 
-                  type="primary" 
-                  size="large"
-                  onClick={() => setShowQuiz(true)}
-                  style={{ height: 44, padding: '0 32px', fontSize: 16, fontWeight: 600, borderRadius: 8 }}
-                >
-                  Bắt đầu ôn tập
-                </Button>
-              )}
+              <Button 
+                type="primary" 
+                size="large"
+                onClick={() => navigate(`/exercises/${moduleId}`)}
+                style={{ height: 44, padding: '0 32px', fontSize: 16, fontWeight: 600, borderRadius: 8 }}
+              >
+                Bắt đầu ôn tập
+              </Button>
             </div>
-
-            {showQuiz && (
-              <>
-                <Alert
-                  message={`Điểm số hiện tại: ${score}/${exercises.length}`}
-                  type="info"
-                  showIcon
-                  style={{ marginBottom: 24, fontSize: 16, borderRadius: 8 }}
-                />
-
-                <Space direction="vertical" style={{ width: '100%' }} size="large">
-                  {exercises.map((exercise, index) => {
-                    const quiz = exercise.examples
-                    const userAnswer = selectedAnswers[exercise.exercise_id]
-                    const showResult = showResults[exercise.exercise_id]
-                    const isCorrect = userAnswer === quiz?.correct_answer
-
-                    return (
-                      <Card
-                        key={exercise.exercise_id}
-                        title={
-                          <Space>
-                            <Text strong style={{ fontSize: 18 }}>Câu {index + 1}:</Text>
-                            <Text style={{ fontSize: 18 }}>{exercise.title}</Text>
-                            <Tag color={getDifficultyColor(exercise.difficulty)} style={{ fontSize: 14, padding: '4px 12px' }}>
-                              {exercise.difficulty}
-                            </Tag>
-                          </Space>
-                        }
-                        style={{ background: '#fafafa', borderRadius: 12 }}
-                      >
-                        <Space direction="vertical" size="large" style={{ width: '100%' }}>
-                          {/* Question */}
-                          <div>
-                            <Text strong style={{ fontSize: 17 }}>
-                              {quiz?.question || exercise.description}
-                            </Text>
-                          </div>
-
-                          {/* Image */}
-                          {quiz?.image_url && (
-                            <img
-                              src={quiz.image_url}
-                              alt={exercise.title}
-                              style={{
-                                width: '100%',
-                                maxHeight: 400,
-                                objectFit: 'cover',
-                                borderRadius: 8,
-                                border: '1px solid #d9d9d9'
-                              }}
-                            />
-                          )}
-
-                          {/* Code */}
-                          {quiz?.code && (
-                            <Card size="small" style={{ background: '#f5f5f5', borderRadius: 8 }}>
-                              <pre style={{ margin: 0, fontSize: 15, fontFamily: 'monospace' }}>
-                                {quiz.code}
-                              </pre>
-                            </Card>
-                          )}
-
-                          {/* Choices */}
-                          {quiz?.choices && (
-                            <Radio.Group
-                              value={userAnswer}
-                              onChange={(e) => handleAnswerSelect(exercise.exercise_id, e.target.value)}
-                              disabled={showResult}
-                              style={{ width: '100%' }}
-                            >
-                              <Space direction="vertical" style={{ width: '100%' }} size="middle">
-                                {quiz.choices.map((choice) => (
-                                  <Radio
-                                    key={choice.id}
-                                    value={choice.id}
-                                    style={{
-                                      display: 'block',
-                                      padding: '18px',
-                                      border: '2px solid',
-                                      borderRadius: 10,
-                                      fontSize: 16,
-                                      background: showResult
-                                        ? choice.id === quiz.correct_answer
-                                          ? '#f6ffed'
-                                          : choice.id === userAnswer
-                                          ? '#fff2e8'
-                                          : 'white'
-                                        : 'white',
-                                      borderColor: showResult
-                                        ? choice.id === quiz.correct_answer
-                                          ? '#52c41a'
-                                          : choice.id === userAnswer
-                                          ? '#fa8c16'
-                                          : '#d9d9d9'
-                                        : '#d9d9d9'
-                                    }}
-                                  >
-                                    <Space size="middle">
-                                      <Text strong style={{ fontSize: 17 }}>{choice.id}.</Text>
-                                      <Text style={{ fontSize: 16 }}>{choice.text}</Text>
-                                      {showResult && choice.id === quiz.correct_answer && (
-                                        <CheckCircleFilled style={{ color: '#52c41a', fontSize: 22 }} />
-                                      )}
-                                      {showResult && choice.id === userAnswer && choice.id !== quiz.correct_answer && (
-                                        <CloseCircleOutlined style={{ color: '#ff4d4f', fontSize: 22 }} />
-                                      )}
-                                    </Space>
-                                  </Radio>
-                                ))}
-                              </Space>
-                            </Radio.Group>
-                          )}
-
-                          {/* Submit Button */}
-                          {!showResult && quiz?.choices && (
-                            <Button
-                              type="primary"
-                              size="large"
-                              onClick={() => handleSubmitAnswer(exercise)}
-                              disabled={!userAnswer}
-                              block
-                              style={{ height: 44, fontSize: 16, fontWeight: 600, borderRadius: 8 }}
-                            >
-                              Kiểm tra đáp án
-                            </Button>
-                          )}
-
-                          {/* Explanation */}
-                          {showResult && quiz?.explanation && (
-                            <Alert
-                              message={isCorrect ? '✅ Chính xác!' : '❌ Chưa đúng'}
-                              description={<span style={{ fontSize: 15 }}>{quiz.explanation}</span>}
-                              type={isCorrect ? 'success' : 'info'}
-                              showIcon
-                              style={{ borderRadius: 8 }}
-                            />
-                          )}
-                        </Space>
-                      </Card>
-                    )
-                  })}
-                </Space>
-
-                {/* Final Score */}
-                {Object.keys(showResults).length === exercises.length && (
-                  <Card style={{ background: '#f0f5ff', textAlign: 'center', borderRadius: 12, marginTop: 32 }}>
-                    <Title level={2} style={{ fontSize: 32, fontWeight: 700 }}>
-                      🎉 Hoàn thành! Điểm số: {score}/{exercises.length}
-                    </Title>
-                    <Space size="large">
-                      <Button 
-                        size="large"
-                        onClick={() => {
-                          setShowQuiz(false)
-                          setSelectedAnswers({})
-                          setShowResults({})
-                          setScore(0)
-                        }}
-                        style={{ height: 44, padding: '0 28px', fontSize: 16, borderRadius: 8 }}
-                      >
-                        Làm lại
-                      </Button>
-                      <Button 
-                        type="primary" 
-                        size="large"
-                        onClick={() => navigate(-1)}
-                        style={{ height: 44, padding: '0 28px', fontSize: 16, fontWeight: 600, borderRadius: 8 }}
-                      >
-                        Quay lại khóa học
-                      </Button>
-                    </Space>
-                  </Card>
-                )}
-              </>
-            )}
           </Space>
         </Card>
       )}

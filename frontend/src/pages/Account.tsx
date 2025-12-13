@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Descriptions, Avatar, Spin, Alert, Button, Typography, Space, Modal, Form, Input, message } from 'antd'
-import { UserOutlined, MailOutlined, CalendarOutlined, EditOutlined, LockOutlined } from '@ant-design/icons'
+import { Card, Avatar, Spin, Alert, Button, Typography, Space, Modal, Form, Input, message, Tabs, Badge, Progress } from 'antd'
+import { UserOutlined, MailOutlined, CalendarOutlined, EditOutlined, LockOutlined, BookOutlined, TrophyOutlined, LineChartOutlined, SafetyCertificateOutlined, ClockCircleOutlined, RocketOutlined } from '@ant-design/icons'
 import api from '../services/api'
+import { useNavigate } from 'react-router-dom'
 
-const { Title } = Typography
+const { Title, Text } = Typography
+const { TabPane } = Tabs
 
 type UserInfo = {
   user_id: string
@@ -22,8 +24,11 @@ const Account: React.FC = () => {
   const [editModalVisible, setEditModalVisible] = useState(false)
   const [passwordModalVisible, setPasswordModalVisible] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [progressData, setProgressData] = useState<any[]>([])
+  const [certificates, setCertificates] = useState<any[]>([])
   const [editForm] = Form.useForm()
   const [passwordForm] = Form.useForm()
+  const navigate = useNavigate()
 
   useEffect(() => {
     const userId = localStorage.getItem('user_id')
@@ -33,11 +38,16 @@ const Account: React.FC = () => {
       return
     }
 
-    // Fetch user info
-    api
-      .get(`/api/auth/users/${userId}`)
-      .then((res) => {
-        setUser(res.data?.data || res.data)
+    // Fetch user info, progress, and certificates
+    Promise.all([
+      api.get(`/api/auth/users/${userId}`),
+      api.get(`/api/progress/user/${userId}`).catch(() => ({ data: [] })),
+      api.get(`/api/certificates/user/${userId}`).catch(() => ({ data: [] }))
+    ])
+      .then(([userRes, progressRes, certsRes]) => {
+        setUser(userRes.data?.data || userRes.data)
+        setProgressData(progressRes.data?.data || progressRes.data || [])
+        setCertificates(certsRes.data?.data || certsRes.data || [])
       })
       .catch((err) => {
         setError(err.response?.data?.error || 'Failed to load account information')
@@ -107,215 +117,621 @@ const Account: React.FC = () => {
   }
 
   return (
-    <div style={{ display: 'flex', minHeight: 'calc(100vh - 128px)', background: '#f5f5f5' }}>
-      {/* Left Sidebar - Profile Summary */}
+    <>
+    <div style={{ display: 'flex', minHeight: 'calc(100vh - 64px)', background: '#f0f2f5' }}>
+      {/* Left Sidebar */}
       <div style={{ 
-        width: 320, 
+        width: 280, 
         background: 'white', 
         borderRight: '1px solid #e8e8e8',
-        padding: '32px 24px'
+        padding: '24px 16px',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'sticky',
+        top: 0,
+        height: 'calc(100vh - 64px)',
+        overflowY: 'auto'
       }}>
-        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+        {/* Avatar Section */}
+        <div style={{ 
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          borderRadius: 16,
+          padding: '32px 20px',
+          textAlign: 'center',
+          marginBottom: 24
+        }}>
           <Avatar 
-            size={120} 
+            size={100} 
             icon={<UserOutlined />} 
             src={user?.avatar_url}
             style={{ 
-              backgroundColor: '#1890ff', 
+              backgroundColor: 'white', 
               marginBottom: 16,
-              border: '4px solid #f0f0f0'
+              border: '4px solid white',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
             }} 
           />
-          <Title level={3} style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>
+          <div style={{ 
+            color: 'white', 
+            fontSize: 18, 
+            fontWeight: 700, 
+            marginBottom: 6,
+            fontFamily: "'Poppins', sans-serif"
+          }}>
             {user?.full_name || 'User'}
-          </Title>
-          <div style={{ color: '#666', fontSize: 14, marginTop: 8 }}>
-            <MailOutlined style={{ marginRight: 6 }} />
-            {user?.email}
           </div>
-          {user?.role && (
-            <div style={{ marginTop: 12 }}>
-              <span style={{ 
-                padding: '6px 16px', 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
-                borderRadius: 16,
-                fontSize: '13px',
-                fontWeight: 600
-              }}>
-                {user.role.toUpperCase()}
-              </span>
+          <div style={{ color: 'rgba(255,255,255,0.85)', fontSize: 13, marginBottom: 12 }}>
+            {user?.role === 'admin' ? 'Quản trị viên' : 'Học viên'}
+          </div>
+          <Badge 
+            status="success" 
+            text={<span style={{ color: 'white', fontSize: 12 }}>{user?.user_id?.substring(0, 8)}</span>} 
+          />
+          <div style={{ marginTop: 12, color: 'white', fontSize: 13 }}>
+            <span style={{ 
+              padding: '4px 12px',
+              background: 'rgba(255,255,255,0.2)',
+              borderRadius: 12,
+              textTransform: 'uppercase',
+              fontWeight: 600
+            }}>
+              {user?.current_level || 'Beginner'}
+            </span>
+          </div>
+        </div>
+
+        {/* Contact Info */}
+        <Card 
+          size="small" 
+          style={{ marginBottom: 16, borderRadius: 12 }}
+          bodyStyle={{ padding: 12 }}
+        >
+          <Space direction="vertical" size={8} style={{ width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <MailOutlined style={{ color: '#1890ff' }} />
+              <Text style={{ fontSize: 13 }} ellipsis>{user?.email}</Text>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <CalendarOutlined style={{ color: '#52c41a' }} />
+              <Text style={{ fontSize: 13 }}>
+                Tham gia: {user?.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN') : 'N/A'}
+              </Text>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <BookOutlined style={{ color: '#faad14' }} />
+              <Text style={{ fontSize: 13 }}>
+                {progressData.length} khóa học
+              </Text>
+            </div>
+          </Space>
+        </Card>
+
+        {/* Quick Stats */}
+        <div style={{ marginBottom: 16 }}>
+          <Text type="secondary" style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, display: 'block' }}>Thống kê nhanh</Text>
+          <Space direction="vertical" size={8} style={{ width: '100%' }}>
+            <div style={{ 
+              padding: 12, 
+              background: '#e6f7ff', 
+              borderRadius: 8,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <Text style={{ fontSize: 13 }}>Khóa học đang học</Text>
+              <Text strong style={{ fontSize: 16, color: '#1890ff' }}>{progressData.length}</Text>
+            </div>
+            <div style={{ 
+              padding: 12, 
+              background: '#f6ffed', 
+              borderRadius: 8,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <Text style={{ fontSize: 13 }}>Chứng chỉ đạt được</Text>
+              <Text strong style={{ fontSize: 16, color: '#52c41a' }}>{certificates.length}</Text>
+            </div>
+          </Space>
+        </div>
+
+        {/* Navigation Menu */}
+        <div style={{ flex: 1 }}>
+          <div style={{ 
+            padding: '12px 16px',
+            cursor: 'pointer',
+            fontSize: 14,
+            color: '#1890ff',
+            background: '#e6f7ff',
+            borderLeft: '3px solid #1890ff',
+            borderRadius: 8,
+            marginBottom: 8,
+            fontWeight: 600
+          }}>
+            👤 Thông tin cá nhân
+          </div>
+          <div 
+            onClick={() => navigate('/progress')}
+            style={{ 
+              padding: '12px 16px',
+              cursor: 'pointer',
+              fontSize: 14,
+              color: '#666',
+              marginBottom: 8,
+              transition: 'all 0.3s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            📊 Tiến độ học tập
+          </div>
+          <div 
+            onClick={() => navigate('/certificates')}
+            style={{ 
+              padding: '12px 16px',
+              cursor: 'pointer',
+              fontSize: 14,
+              color: '#666',
+              marginBottom: 8,
+              transition: 'all 0.3s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            🎓 Chứng chỉ
+          </div>
+          <div 
+            onClick={() => navigate('/roadmaps')}
+            style={{ 
+              padding: '12px 16px',
+              cursor: 'pointer',
+              fontSize: 14,
+              color: '#666',
+              marginBottom: 8,
+              transition: 'all 0.3s'
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#f5f5f5'}
+            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            🗺️ Lộ trình học
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div style={{ flex: 1, padding: 24, overflowY: 'auto' }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <Title level={2} style={{ 
+            fontSize: 28, 
+            fontWeight: 800, 
+            marginBottom: 24,
+            fontFamily: "'Poppins', 'Segoe UI', 'Roboto', sans-serif"
+          }}>
+            Thông tin cá nhân
+          </Title>
+
+          {/* Tabs Section */}
+          <Card style={{ borderRadius: 16, border: 'none', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+            <Tabs defaultActiveKey="1" size="large">
+              <TabPane 
+                tab={
+                  <Space>
+                    <UserOutlined style={{ color: '#1890ff' }} />
+                    <span>THÔNG TIN CƠ BẢN</span>
+                  </Space>
+                } 
+                key="1"
+              >
+                <div style={{ padding: '24px 0' }}>
+                  <div style={{ 
+                    color: '#1890ff', 
+                    fontSize: 18, 
+                    fontWeight: 700, 
+                    marginBottom: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8
+                  }}>
+                    <UserOutlined />
+                    THÔNG TIN CÁ NHÂN
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 24 }}>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 13 }}>Họ và tên</Text>
+                      <div style={{ fontSize: 16, fontWeight: 600, marginTop: 4 }}>{user?.full_name}</div>
+                    </div>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 13 }}>Email</Text>
+                      <div style={{ fontSize: 16, fontWeight: 600, marginTop: 4 }}>{user?.email}</div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24, marginBottom: 24 }}>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 13 }}>Trình độ hiện tại</Text>
+                      <div style={{ marginTop: 4 }}>
+                        <span style={{ 
+                          padding: '6px 16px',
+                          background: user?.current_level === 'advanced' ? '#f6ffed' : user?.current_level === 'intermediate' ? '#fff7e6' : '#e6f7ff',
+                          color: user?.current_level === 'advanced' ? '#52c41a' : user?.current_level === 'intermediate' ? '#faad14' : '#1890ff',
+                          borderRadius: 8,
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          display: 'inline-block'
+                        }}>
+                          {user?.current_level || 'Beginner'}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 13 }}>Vai trò</Text>
+                      <div style={{ fontSize: 16, fontWeight: 600, marginTop: 4, textTransform: 'capitalize' }}>
+                        {user?.role === 'admin' ? 'Quản trị viên' : 'Học viên'}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 24 }}>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 13 }}>User ID</Text>
+                      <div style={{ marginTop: 4 }}>
+                        <code style={{ 
+                          background: '#f5f5f5', 
+                          padding: '6px 12px', 
+                          borderRadius: 6,
+                          fontSize: '13px',
+                          fontFamily: 'monospace'
+                        }}>
+                          {user?.user_id}
+                        </code>
+                      </div>
+                    </div>
+                    <div>
+                      <Text type="secondary" style={{ fontSize: 13 }}>Ngày tham gia</Text>
+                      <div style={{ fontSize: 16, fontWeight: 600, marginTop: 4 }}>
+                        {user?.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric'
+                        }) : 'N/A'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {user?.avatar_url && (
+                    <div style={{ marginTop: 24 }}>
+                      <Text type="secondary" style={{ fontSize: 13 }}>Avatar URL</Text>
+                      <div style={{ marginTop: 4 }}>
+                        <a href={user.avatar_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: '#1890ff', wordBreak: 'break-all' }}>
+                          {user.avatar_url}
+                        </a>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </TabPane>
+
+              <TabPane 
+                tab={
+                  <Space>
+                    <BookOutlined />
+                    <span>KHÓA HỌC CỦA TÔI</span>
+                  </Space>
+                } 
+                key="2"
+              >
+                <div style={{ padding: '24px 0' }}>
+                  <div style={{ 
+                    color: '#1890ff', 
+                    fontSize: 18, 
+                    fontWeight: 700, 
+                    marginBottom: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8
+                  }}>
+                    <BookOutlined />
+                    DANH SÁCH KHÓA HỌC
+                  </div>
+                  
+                  {progressData.length > 0 ? (
+                    <Space direction="vertical" style={{ width: '100%' }} size={16}>
+                      {progressData.slice(0, 5).map((course: any, idx: number) => (
+                        <Card 
+                          key={idx}
+                          size="small"
+                          hoverable
+                          onClick={() => navigate('/progress')}
+                          style={{ borderRadius: 12 }}
+                        >
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+                            <div>
+                              <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 4 }}>
+                                {course.roadmap_title || `Khóa học ${idx + 1}`}
+                              </div>
+                              <Text type="secondary" style={{ fontSize: 13 }}>
+                                {course.modules_count || 0} modules • Đang học
+                              </Text>
+                            </div>
+                            <RocketOutlined style={{ fontSize: 24, color: '#1890ff' }} />
+                          </div>
+                          <Progress 
+                            percent={Math.round((course.completed_count / (course.modules_count || 1)) * 100)} 
+                            strokeColor={{
+                              '0%': '#667eea',
+                              '100%': '#764ba2',
+                            }}
+                          />
+                        </Card>
+                      ))}
+                    </Space>
+                  ) : (
+                    <div style={{ padding: '40px 0', textAlign: 'center', color: '#999' }}>
+                      <BookOutlined style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }} />
+                      <div>Bạn chưa đăng ký khóa học nào</div>
+                    </div>
+                  )}
+                </div>
+              </TabPane>
+
+              <TabPane 
+                tab={
+                  <Space>
+                    <TrophyOutlined />
+                    <span>CHỨNG CHỈ</span>
+                  </Space>
+                } 
+                key="3"
+              >
+                <div style={{ padding: '24px 0' }}>
+                  <div style={{ 
+                    color: '#1890ff', 
+                    fontSize: 18, 
+                    fontWeight: 700, 
+                    marginBottom: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8
+                  }}>
+                    <SafetyCertificateOutlined />
+                    CHỨNG CHỈ ĐÃ ĐẠT ĐƯỢC
+                  </div>
+                  
+                  {certificates.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+                      {certificates.map((cert: any, idx: number) => (
+                        <Card 
+                          key={idx}
+                          size="small"
+                          hoverable
+                          style={{ 
+                            borderRadius: 12,
+                            background: 'linear-gradient(135deg, #f6f9fc 0%, #fff 100%)',
+                            border: '2px solid #e8e8e8'
+                          }}
+                        >
+                          <div style={{ textAlign: 'center', padding: '12px 0' }}>
+                            <TrophyOutlined style={{ fontSize: 36, color: '#faad14', marginBottom: 12 }} />
+                            <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 8 }}>
+                              {cert.certificate_name || cert.roadmap_title}
+                            </div>
+                            <Text type="secondary" style={{ fontSize: 12 }}>
+                              Hoàn thành: {cert.issued_date ? new Date(cert.issued_date).toLocaleDateString('vi-VN') : 'N/A'}
+                            </Text>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div style={{ padding: '40px 0', textAlign: 'center', color: '#999' }}>
+                      <SafetyCertificateOutlined style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }} />
+                      <div>Chưa có chứng chỉ nào</div>
+                      <Button type="primary" style={{ marginTop: 16 }} onClick={() => navigate('/roadmaps')}>
+                        Khám phá khóa học
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </TabPane>
+
+              <TabPane 
+                tab={
+                  <Space>
+                    <LineChartOutlined />
+                    <span>HOẠT ĐỘNG</span>
+                  </Space>
+                } 
+                key="4"
+              >
+                <div style={{ padding: '24px 0' }}>
+                  <div style={{ 
+                    color: '#1890ff', 
+                    fontSize: 18, 
+                    fontWeight: 700, 
+                    marginBottom: 24,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8
+                  }}>
+                    <LineChartOutlined />
+                    LỊCH SỬ HOẠT ĐỘNG
+                  </div>
+                  
+                  <div style={{ padding: '40px 0', textAlign: 'center', color: '#999' }}>
+                    <ClockCircleOutlined style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }} />
+                    <div>Chức năng đang được phát triển</div>
+                  </div>
+                </div>
+              </TabPane>
+            </Tabs>
+          </Card>
+
+          {/* Action Buttons */}
+          <div style={{ marginTop: 24, display: 'flex', gap: 16 }}>
+            <Button 
+              type="primary" 
+              icon={<EditOutlined />} 
+              onClick={openEditModal}
+              size="large"
+              style={{
+                borderRadius: 8,
+                fontWeight: 600,
+                height: 48
+              }}
+            >
+              Chỉnh sửa thông tin
+            </Button>
+            <Button 
+              icon={<LockOutlined />} 
+              onClick={() => setPasswordModalVisible(true)}
+              size="large"
+              style={{
+                borderRadius: 8,
+                fontWeight: 600,
+                height: 48
+              }}
+            >
+              Đổi mật khẩu
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Right Sidebar - Learning Stats */}
+      <div style={{ 
+        width: 320, 
+        background: 'white', 
+        borderLeft: '1px solid #e8e8e8',
+        padding: 24,
+        overflowY: 'auto'
+      }}>
+        <Title level={4} style={{ fontSize: 18, fontWeight: 700, marginBottom: 16 }}>
+          Thống kê học tập
+        </Title>
+
+        {/* Learning Progress */}
+        <Card 
+          size="small"
+          style={{ 
+            marginBottom: 16, 
+            borderRadius: 12,
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            border: 'none'
+          }}
+        >
+          <div style={{ color: 'white', textAlign: 'center', padding: '12px 0' }}>
+            <div style={{ fontSize: 40, fontWeight: 800, marginBottom: 8 }}>
+              {progressData.length}
+            </div>
+            <div style={{ fontSize: 14, opacity: 0.9 }}>Khóa học đang theo học</div>
+          </div>
+        </Card>
+
+        <Card 
+          size="small"
+          style={{ 
+            marginBottom: 16, 
+            borderRadius: 12,
+            background: 'linear-gradient(135deg, #52c41a 0%, #237804 100%)',
+            border: 'none'
+          }}
+        >
+          <div style={{ color: 'white', textAlign: 'center', padding: '12px 0' }}>
+            <div style={{ fontSize: 40, fontWeight: 800, marginBottom: 8 }}>
+              {certificates.length}
+            </div>
+            <div style={{ fontSize: 14, opacity: 0.9 }}>Chứng chỉ đã đạt</div>
+          </div>
+        </Card>
+
+        {/* Recent Courses */}
+        <div style={{ marginTop: 24 }}>
+          <Title level={5} style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
+            Khóa học gần đây
+          </Title>
+          
+          {progressData.length > 0 ? (
+            <Space direction="vertical" style={{ width: '100%' }} size={12}>
+              {progressData.slice(0, 4).map((course: any, idx: number) => (
+                <div 
+                  key={idx}
+                  style={{ 
+                    padding: 12,
+                    background: '#fafafa',
+                    borderRadius: 8,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s'
+                  }}
+                  onClick={() => navigate('/progress')}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#f0f0f0'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#fafafa'}
+                >
+                  <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 4, color: '#1a1a1a' }}>
+                    {course.roadmap_title || `Khóa học ${idx + 1}`}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#666', marginBottom: 8 }}>
+                    {course.modules_count || 0} modules
+                  </div>
+                  <Progress 
+                    percent={Math.round((course.completed_count / (course.modules_count || 1)) * 100)} 
+                    size="small"
+                    strokeColor="#1890ff"
+                  />
+                </div>
+              ))}
+            </Space>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '20px 0', color: '#999', fontSize: 13 }}>
+              Chưa có khóa học nào
             </div>
           )}
         </div>
 
-        <div style={{ 
-          padding: 16, 
-          background: '#f0f5ff', 
-          borderRadius: 12,
-          marginBottom: 24
-        }}>
-          <div style={{ fontSize: 13, color: '#666', marginBottom: 8 }}>Trình độ hiện tại</div>
-          <div style={{ fontSize: 18, fontWeight: 700, color: '#1890ff', textTransform: 'uppercase' }}>
-            {user?.current_level || 'beginner'}
-          </div>
-        </div>
-
-        <div style={{ 
-          padding: 16, 
-          background: '#fafafa', 
-          borderRadius: 12,
-          marginBottom: 24
-        }}>
-          <div style={{ fontSize: 13, color: '#666', marginBottom: 8 }}>
-            <CalendarOutlined style={{ marginRight: 6 }} />
-            Tham gia từ
-          </div>
-          <div style={{ fontSize: 15, fontWeight: 600 }}>
-            {user?.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            }) : 'N/A'}
-          </div>
-        </div>
-
-        <Space direction="vertical" style={{ width: '100%' }} size="middle">
-          <Button 
-            type="primary" 
-            icon={<EditOutlined />} 
-            onClick={openEditModal}
-            block
-            size="large"
-            style={{ height: 44, fontSize: 15, fontWeight: 600, borderRadius: 8 }}
-          >
-            Chỉnh sửa thông tin
-          </Button>
-          <Button 
-            icon={<LockOutlined />} 
-            onClick={() => setPasswordModalVisible(true)}
-            block
-            size="large"
-            style={{ height: 44, fontSize: 15, borderRadius: 8 }}
-          >
-            Đổi mật khẩu
-          </Button>
-        </Space>
-      </div>
-
-      {/* Main Content Area */}
-      <div style={{ 
-        flex: 1, 
-        padding: '40px 60px',
-        overflowY: 'auto'
-      }}>
-        <div style={{ maxWidth: 900 }}>
-          <Title level={2} style={{ fontSize: 32, fontWeight: 700, marginBottom: 32 }}>
-            Personal details
+        {/* Quick Actions */}
+        <div style={{ marginTop: 24 }}>
+          <Title level={5} style={{ fontSize: 16, fontWeight: 700, marginBottom: 12 }}>
+            Hành động nhanh
           </Title>
-
-          {/* Personal Information Card */}
-          <Card 
-            title={
-              <Space>
-                <UserOutlined style={{ color: '#1890ff', fontSize: 20 }} />
-                <span style={{ fontSize: 18, fontWeight: 600 }}>Thông tin cá nhân</span>
-              </Space>
-            }
-            style={{ marginBottom: 24, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
-          >
-            <Descriptions 
-              column={1}
-              labelStyle={{ fontWeight: 600, width: '180px', fontSize: 15 }}
-              contentStyle={{ fontSize: 15 }}
+          <Space direction="vertical" style={{ width: '100%' }} size={8}>
+            <Button 
+              block 
+              onClick={() => navigate('/roadmaps')}
+              style={{ 
+                height: 40, 
+                textAlign: 'left',
+                border: '1px solid #d9d9d9'
+              }}
             >
-              <Descriptions.Item label="Họ và tên">
-                {user?.full_name}
-              </Descriptions.Item>
-              <Descriptions.Item label="Email">
-                {user?.email}
-              </Descriptions.Item>
-              <Descriptions.Item label="Trình độ">
-                <span style={{ 
-                  padding: '4px 12px', 
-                  background: user?.current_level === 'advanced' ? '#f6ffed' : user?.current_level === 'intermediate' ? '#fff7e6' : '#e6f7ff',
-                  color: user?.current_level === 'advanced' ? '#52c41a' : user?.current_level === 'intermediate' ? '#faad14' : '#1890ff',
-                  borderRadius: 8,
-                  fontSize: '14px',
-                  fontWeight: 600,
-                  textTransform: 'uppercase'
-                }}>
-                  {user?.current_level || 'beginner'}
-                </span>
-              </Descriptions.Item>
-              {user?.avatar_url && (
-                <Descriptions.Item label="Avatar URL">
-                  <a href={user.avatar_url} target="_blank" rel="noopener noreferrer" style={{ fontSize: 14 }}>
-                    {user.avatar_url}
-                  </a>
-                </Descriptions.Item>
-              )}
-            </Descriptions>
-          </Card>
-
-          {/* Account Information Card */}
-          <Card 
-            title={
-              <Space>
-                <LockOutlined style={{ color: '#52c41a', fontSize: 20 }} />
-                <span style={{ fontSize: 18, fontWeight: 600 }}>Thông tin tài khoản</span>
-              </Space>
-            }
-            style={{ marginBottom: 24, borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
-          >
-            <Descriptions 
-              column={1}
-              labelStyle={{ fontWeight: 600, width: '180px', fontSize: 15 }}
-              contentStyle={{ fontSize: 15 }}
+              🔍 Khám phá khóa học mới
+            </Button>
+            <Button 
+              block 
+              onClick={() => navigate('/progress')}
+              style={{ 
+                height: 40, 
+                textAlign: 'left',
+                border: '1px solid #d9d9d9'
+              }}
             >
-              <Descriptions.Item label="User ID">
-                <code style={{ 
-                  background: '#f5f5f5', 
-                  padding: '6px 12px', 
-                  borderRadius: 6,
-                  fontSize: '13px',
-                  fontFamily: 'monospace'
-                }}>
-                  {user?.user_id}
-                </code>
-              </Descriptions.Item>
-              <Descriptions.Item label="Vai trò">
-                {user?.role || 'user'}
-              </Descriptions.Item>
-              <Descriptions.Item label="Ngày tạo">
-                {user?.created_at ? new Date(user.created_at).toLocaleDateString('vi-VN', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                }) : 'N/A'}
-              </Descriptions.Item>
-            </Descriptions>
-          </Card>
-
-          {/* Additional Info Placeholder */}
-          <Card 
-            title={
-              <Space>
-                <CalendarOutlined style={{ color: '#faad14', fontSize: 20 }} />
-                <span style={{ fontSize: 18, fontWeight: 600 }}>Work preferences</span>
-              </Space>
-            }
-            style={{ borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}
-          >
-            <div style={{ padding: '32px 0', textAlign: 'center', color: '#999' }}>
-              <UserOutlined style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }} />
-              <div style={{ fontSize: 16 }}>Phần này có thể thêm thông tin về sở thích học tập, mục tiêu nghề nghiệp...</div>
-            </div>
-          </Card>
+              📚 Tiếp tục học tập
+            </Button>
+            <Button 
+              block 
+              onClick={() => navigate('/certificates')}
+              style={{ 
+                height: 40, 
+                textAlign: 'left',
+                border: '1px solid #d9d9d9'
+              }}
+            >
+              🏆 Xem chứng chỉ
+            </Button>
+          </Space>
         </div>
       </div>
+    </div>
 
       {/* Edit Profile Modal */}
       <Modal
@@ -341,20 +757,20 @@ const Account: React.FC = () => {
             name="full_name"
             rules={[{ required: true, message: 'Vui lòng nhập họ tên!' }]}
           >
-            <Input size="large" prefix={<UserOutlined />} placeholder="Nhập họ và tên" />
+            <Input size="large" placeholder="Nhập họ và tên" />
           </Form.Item>
           <Form.Item
             label="Avatar URL"
             name="avatar_url"
           >
-            <Input size="large" placeholder="https://example.com/avatar.jpg" />
+            <Input size="large" placeholder="https://..." />
           </Form.Item>
           <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
-            <Space style={{ width: '100%', justifyContent: 'flex-end' }} size="middle">
-              <Button size="large" onClick={() => setEditModalVisible(false)} style={{ height: 44, padding: '0 24px' }}>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button size="large" onClick={() => setEditModalVisible(false)}>
                 Hủy
               </Button>
-              <Button type="primary" htmlType="submit" loading={submitting} size="large" style={{ height: 44, padding: '0 32px', fontWeight: 600 }}>
+              <Button type="primary" htmlType="submit" loading={submitting} size="large">
                 Lưu thay đổi
               </Button>
             </Space>
@@ -366,7 +782,7 @@ const Account: React.FC = () => {
       <Modal
         title={
           <Space>
-            <LockOutlined style={{ color: '#52c41a', fontSize: 20 }} />
+            <LockOutlined style={{ color: '#faad14', fontSize: 20 }} />
             <span style={{ fontSize: 18, fontWeight: 600 }}>Đổi mật khẩu</span>
           </Space>
         }
@@ -386,7 +802,7 @@ const Account: React.FC = () => {
             name="currentPassword"
             rules={[{ required: true, message: 'Vui lòng nhập mật khẩu hiện tại!' }]}
           >
-            <Input.Password size="large" prefix={<LockOutlined />} placeholder="Nhập mật khẩu hiện tại" />
+            <Input.Password size="large" placeholder="Nhập mật khẩu hiện tại" />
           </Form.Item>
           <Form.Item
             label="Mật khẩu mới"
@@ -396,7 +812,7 @@ const Account: React.FC = () => {
               { min: 6, message: 'Mật khẩu phải có ít nhất 6 ký tự!' }
             ]}
           >
-            <Input.Password size="large" prefix={<LockOutlined />} placeholder="Nhập mật khẩu mới" />
+            <Input.Password size="large" placeholder="Nhập mật khẩu mới" />
           </Form.Item>
           <Form.Item
             label="Xác nhận mật khẩu mới"
@@ -414,21 +830,21 @@ const Account: React.FC = () => {
               }),
             ]}
           >
-            <Input.Password size="large" prefix={<LockOutlined />} placeholder="Nhập lại mật khẩu mới" />
+            <Input.Password size="large" placeholder="Xác nhận mật khẩu mới" />
           </Form.Item>
           <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
-            <Space style={{ width: '100%', justifyContent: 'flex-end' }} size="middle">
-              <Button size="large" onClick={() => setPasswordModalVisible(false)} style={{ height: 44, padding: '0 24px' }}>
+            <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
+              <Button size="large" onClick={() => setPasswordModalVisible(false)}>
                 Hủy
               </Button>
-              <Button type="primary" htmlType="submit" loading={submitting} size="large" style={{ height: 44, padding: '0 32px', fontWeight: 600 }}>
+              <Button type="primary" htmlType="submit" loading={submitting} size="large">
                 Đổi mật khẩu
               </Button>
             </Space>
           </Form.Item>
         </Form>
       </Modal>
-    </div>
+    </>
   )
 }
 

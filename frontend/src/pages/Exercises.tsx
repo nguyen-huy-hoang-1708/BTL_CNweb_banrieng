@@ -1,272 +1,252 @@
-import React from 'react'
-import { Row, Col, Card, Typography, Collapse, Tag } from 'antd'
-import { BulbOutlined, StarOutlined, CheckCircleOutlined } from '@ant-design/icons'
+import React, { useState, useEffect } from 'react'
+import { Card, Button, Typography, Space, Tag } from 'antd'
+import { BookOutlined, PlayCircleOutlined, TrophyOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
+import api from '../services/api'
 
-const { Title, Paragraph, Text } = Typography
-const { Panel } = Collapse
+const { Title, Text } = Typography
 
-const interviewTips = [
-  {
-    id: 1,
-    category: 'Behavioral',
-    question: 'Tell me about yourself',
-    tip: 'Sử dụng công thức Present-Past-Future: Hiện tại bạn đang làm gì, quá khứ bạn đã làm gì, tương lai bạn muốn gì.',
-    example: 'Hiện tại tôi là sinh viên năm 3 chuyên ngành CNTT, đang tập trung vào web development. Trước đây tôi đã hoàn thành 2 dự án fullstack và 1 internship 3 tháng. Tương lai tôi muốn trở thành fullstack developer chuyên nghiệp.',
-    level: 'easy'
-  },
-  {
-    id: 2,
-    category: 'Technical',
-    question: 'Explain the difference between var, let, and const in JavaScript',
-    tip: 'Nhấn mạnh scope, hoisting, và re-assignment. Đưa ví dụ cụ thể cho từng trường hợp.',
-    example: 'var: function-scoped, hoisted, có thể re-assign. let: block-scoped, không hoisted, có thể re-assign. const: block-scoped, không hoisted, KHÔNG thể re-assign (nhưng object properties vẫn mutable).',
-    level: 'medium'
-  },
-  {
-    id: 3,
-    category: 'Behavioral',
-    question: 'Describe a challenging project you worked on',
-    tip: 'Dùng phương pháp STAR: Situation (tình huống), Task (nhiệm vụ), Action (hành động), Result (kết quả).',
-    example: 'Situation: Dự án e-commerce deadline gấp. Task: Tối ưu performance từ 5s xuống <2s. Action: Implement lazy loading, code splitting, caching. Result: Giảm load time xuống 1.5s, tăng conversion 15%.',
-    level: 'medium'
-  },
-  {
-    id: 4,
-    category: 'Technical',
-    question: 'What is closure in JavaScript?',
-    tip: 'Giải thích đơn giản: function bên trong có thể access biến từ function bên ngoài. Đưa ví dụ thực tế.',
-    example: 'Closure là khi inner function "nhớ" scope của outer function ngay cả khi outer function đã return. Ví dụ: counter function, private variables, event handlers.',
-    level: 'hard'
-  },
-  {
-    id: 5,
-    category: 'Behavioral',
-    question: 'Why do you want to work here?',
-    tip: 'Research công ty trước! Kết nối giá trị cá nhân với mission công ty. Tránh nói về lương.',
-    example: 'Tôi thấy công ty focus vào innovation trong fintech, đúng với passion của tôi. Tech stack React/Node cũng match với skillset tôi đang phát triển. Văn hoá learning & growth ở đây rất phù hợp.',
-    level: 'easy'
-  },
-  {
-    id: 6,
-    category: 'Technical',
-    question: 'Explain event loop in Node.js',
-    tip: 'Vẽ diagram nếu được! Giải thích: call stack → callback queue → event loop check.',
-    example: 'Event loop kiểm tra call stack có empty không. Nếu empty, lấy callback từ queue đưa vào stack. Phases: timers → pending → poll → check → close. Microtasks (promises) ưu tiên hơn macrotasks (setTimeout).',
-    level: 'hard'
-  },
-  {
-    id: 7,
-    category: 'Behavioral',
-    question: 'What are your weaknesses?',
-    tip: 'Chọn weakness thật nhưng không critical, và QUAN TRỌNG: nói cách bạn đang improve.',
-    example: 'Trước đây tôi hay perfectionism quá mức khiến deadline bị delay. Giờ tôi đã học cách prioritize và ship MVP trước, iterate sau. Dùng agile methodology giúp tôi cải thiện điểm này.',
-    level: 'medium'
-  },
-  {
-    id: 8,
-    category: 'Technical',
-    question: 'What is the difference between SQL and NoSQL?',
-    tip: 'So sánh structure, scalability, use cases. Đưa ví dụ cụ thể (MySQL vs MongoDB).',
-    example: 'SQL: structured, ACID, vertical scaling, relationships (e.g., PostgreSQL cho banking). NoSQL: flexible schema, eventual consistency, horizontal scaling, denormalized (e.g., MongoDB cho social media, logs).',
-    level: 'medium'
-  },
-  {
-    id: 9,
-    category: 'Behavioral',
-    question: 'How do you handle conflicts in a team?',
-    tip: 'Focus vào communication và problem-solving, không blame người khác.',
-    example: 'Tôi lắng nghe perspective của cả 2 bên, tìm root cause (thường là miscommunication), propose solution dựa trên data/facts, không emotion. Ví dụ: tranh luận về tech stack → tôi tổ chức meeting so sánh pros/cons cụ thể.',
-    level: 'easy'
-  },
-  {
-    id: 10,
-    category: 'Technical',
-    question: 'Explain RESTful API principles',
-    tip: 'Nhắc đến HTTP methods, status codes, stateless, resource-based URLs.',
-    example: 'REST principles: 1) Stateless (mỗi request độc lập), 2) Resource-based URLs (/users/123), 3) HTTP methods chuẩn (GET/POST/PUT/DELETE), 4) Status codes đúng (200/201/404/500), 5) JSON format, 6) HATEOAS (hypermedia links).',
-    level: 'medium'
-  },
-  {
-    id: 11,
-    category: 'Behavioral',
-    question: 'Where do you see yourself in 5 years?',
-    tip: 'Balance giữa ambition và realism. Align với career path công ty offer.',
-    example: 'Trong 2-3 năm đầu, tôi muốn master fullstack development và contribute to architecture decisions. Năm 4-5, tôi mong muốn lead một small team hoặc trở thành senior engineer, mentoring juniors.',
-    level: 'easy'
-  },
-  {
-    id: 12,
-    category: 'Technical',
-    question: 'What is Docker and why use it?',
-    tip: 'Giải thích containerization, so sánh với VM, nói về benefits (consistency, portability).',
-    example: 'Docker đóng gói app + dependencies thành container. Khác VM (virtualize hardware), Docker virtualize OS. Benefits: "works on my machine" problem solved, easy deployment, resource-efficient, microservices-friendly.',
-    level: 'hard'
-  }
-]
+type Module = {
+  module_id: string
+  module_title: string
+  description?: string
+  order_index?: number
+}
 
 const Exercises: React.FC = () => {
-  const getLevelColor = (level: string) => {
-    switch (level) {
-      case 'easy': return 'green'
-      case 'medium': return 'orange'
-      case 'hard': return 'red'
-      default: return 'blue'
+  const navigate = useNavigate()
+  const [modules, setModules] = useState<Module[]>([])
+  const [loading, setLoading] = useState(true)
+
+  // Dữ liệu mẫu
+  const sampleModules: Module[] = [
+    {
+      module_id: '1',
+      module_title: 'HTML Semantic Elements',
+      description: 'Kiểm tra kiến thức về các thẻ HTML semantic',
+      order_index: 1
+    },
+    {
+      module_id: '2', 
+      module_title: 'CSS Flexbox Layout',
+      description: 'Bài tập về Flexbox và responsive design',
+      order_index: 2
+    },
+    {
+      module_id: '3',
+      module_title: 'JavaScript ES6 Features',
+      description: 'Câu hỏi về arrow functions, destructuring, spread operator',
+      order_index: 3
+    },
+    {
+      module_id: '4',
+      module_title: 'React Hooks',
+      description: 'Ôn tập useState, useEffect, useContext',
+      order_index: 4
+    },
+    {
+      module_id: '5',
+      module_title: 'Node.js Fundamentals',
+      description: 'Kiến thức cơ bản về Node.js và Express',
+      order_index: 5
     }
+  ]
+
+  useEffect(() => {
+    const fetchModules = async () => {
+      try {
+        const res = await api.get('/api/roadmaps')
+        const roadmaps = res.data?.data || res.data || []
+        if (roadmaps.length > 0) {
+          // Lấy modules từ roadmap đầu tiên
+          const firstRoadmap = roadmaps[0]
+          if (firstRoadmap.modules && firstRoadmap.modules.length > 0) {
+            setModules(firstRoadmap.modules.slice(0, 5))
+          } else {
+            setModules(sampleModules)
+          }
+        } else {
+          setModules(sampleModules)
+        }
+      } catch (err) {
+        console.error('Failed to load modules:', err)
+        setModules(sampleModules)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchModules()
+  }, [])
+
+  const handleStartQuiz = (moduleId: string) => {
+    navigate(`/exercises/${moduleId}`)
   }
 
-  const behavioral = interviewTips.filter(tip => tip.category === 'Behavioral')
-  const technical = interviewTips.filter(tip => tip.category === 'Technical')
-
   return (
-    <div style={{ padding: '40px 80px', maxWidth: 1400, margin: '0 auto' }}>
-      <div style={{ marginBottom: 48, textAlign: 'center' }}>
-        <BulbOutlined style={{ fontSize: 64, color: '#faad14', marginBottom: 16 }} />
-        <Title level={1} style={{ fontSize: 42, fontWeight: 700, marginBottom: 16 }}>
-          Những câu hỏi mẹo hay khi đi phỏng vấn
-        </Title>
-        <Paragraph style={{ fontSize: 18, color: '#666', maxWidth: 800, margin: '0 auto' }}>
-          Tổng hợp các câu hỏi phổ biến nhất trong phỏng vấn kèm theo tips trả lời thông minh
-        </Paragraph>
+    <div style={{ 
+      minHeight: 'calc(100vh - 64px)',
+      background: '#f5f7fa'
+    }}>
+      {/* Hero Section */}
+      <div style={{ 
+        background: 'linear-gradient(135deg, #e6f7ff 0%, #f5f5f5 100%)',
+        padding: '80px 24px',
+        borderBottom: '1px solid #e0e0e0',
+        textAlign: 'center'
+      }}>
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <BookOutlined style={{ fontSize: 64, color: '#1890ff', marginBottom: 24 }} />
+          <Title level={1} style={{ 
+            fontSize: 48,
+            fontWeight: 700,
+            marginBottom: 16,
+            color: '#1a1a1a'
+          }}>
+            ✍️ Bài tập ôn tập
+          </Title>
+          <Text style={{ fontSize: 18, color: '#666' }}>
+            Kiểm tra kiến thức của bạn với 5 câu hỏi trắc nghiệm
+          </Text>
+        </div>
       </div>
 
-      <Row gutter={[24, 24]} style={{ marginBottom: 40 }}>
-        <Col xs={24} md={12}>
-          <Card 
-            size="small" 
-            style={{ 
-              background: 'linear-gradient(135deg, #e6f7ff 0%, #bae7ff 100%)',
-              textAlign: 'center',
-              borderRadius: 12,
-              border: '2px solid #1890ff',
-              boxShadow: '0 4px 12px rgba(24,144,255,0.15)'
-            }}
-            bodyStyle={{ padding: 32 }}
-          >
-            <StarOutlined style={{ fontSize: 48, color: '#1890ff', marginBottom: 16 }} />
-            <Title level={2} style={{ margin: 0, fontSize: 28 }}>Behavioral Questions</Title>
-            <Text style={{ fontSize: 18, fontWeight: 600, color: '#1890ff' }}>{behavioral.length} câu hỏi</Text>
-          </Card>
-        </Col>
-        <Col xs={24} md={12}>
-          <Card 
-            size="small" 
-            style={{ 
-              background: 'linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%)',
-              textAlign: 'center',
-              borderRadius: 12,
-              border: '2px solid #52c41a',
-              boxShadow: '0 4px 12px rgba(82,196,26,0.15)'
-            }}
-            bodyStyle={{ padding: 32 }}
-          >
-            <CheckCircleOutlined style={{ fontSize: 48, color: '#52c41a', marginBottom: 16 }} />
-            <Title level={2} style={{ margin: 0, fontSize: 28 }}>Technical Questions</Title>
-            <Text style={{ fontSize: 18, fontWeight: 600, color: '#52c41a' }}>{technical.length} câu hỏi</Text>
-          </Card>
-        </Col>
-      </Row>
-
-      <Row gutter={[32, 32]}>
-        <Col xs={24} lg={12}>
-          <Title level={3} style={{ fontSize: 26, marginBottom: 24 }}>
-            <StarOutlined style={{ color: '#1890ff', marginRight: 8 }} />
-            Behavioral Questions
+      {/* Main Content */}
+      <div style={{ 
+        maxWidth: 1200, 
+        margin: '0 auto',
+        padding: '48px 24px'
+      }}>
+        <div style={{ marginBottom: 32 }}>
+          <Title level={2} style={{ fontSize: 28, fontWeight: 700, marginBottom: 8 }}>
+            Các bài tập có sẵn
           </Title>
-          <Collapse 
-            accordion 
-            bordered={false}
-            style={{ background: 'transparent' }}
-          >
-            {behavioral.map((tip) => (
-              <Panel
-                key={tip.id}
-                header={
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <Tag color="blue" style={{ fontSize: 13, padding: '4px 12px' }}>
-                      {tip.category}
-                    </Tag>
-                    <Tag color={getLevelColor(tip.level)} style={{ fontSize: 13, padding: '4px 12px' }}>
-                      {tip.level}
-                    </Tag>
-                    <Text strong style={{ flex: 1, fontSize: 15 }}>{tip.question}</Text>
-                  </div>
-                }
-                style={{ marginBottom: 16, border: '1px solid #d9d9d9', borderRadius: 12, background: 'white' }}
-              >
-                <div style={{ padding: '16px 0' }}>
-                  <div style={{ marginBottom: 20 }}>
-                    <Text strong style={{ color: '#1890ff', fontSize: 17 }}>💡 Mẹo trả lời:</Text>
-                    <Paragraph style={{ marginTop: 12, fontSize: 16, lineHeight: 1.9, color: '#333' }}>
-                      {tip.tip}
-                    </Paragraph>
-                  </div>
-                  <div>
-                    <Text strong style={{ color: '#52c41a', fontSize: 17 }}>✅ Câu trả lời mẫu:</Text>
-                    <Card 
-                      size="small" 
-                      style={{ marginTop: 12, background: '#fafafa', border: '1px dashed #d9d9d9', borderRadius: 8 }}
-                    >
-                      <Text style={{ fontSize: 15, fontStyle: 'italic', lineHeight: 1.8 }}>
-                        {tip.example}
-                      </Text>
-                    </Card>
-                  </div>
-                </div>
-              </Panel>
-            ))}
-          </Collapse>
-        </Col>
+          <Text type="secondary" style={{ fontSize: 15 }}>
+            Mỗi bài có 5 câu hỏi trắc nghiệm • Hoàn thành để nhận điểm
+          </Text>
+        </div>
 
-        <Col xs={24} lg={12}>
-          <Title level={3} style={{ fontSize: 26, marginBottom: 24 }}>
-            <CheckCircleOutlined style={{ color: '#52c41a', marginRight: 8 }} />
-            Technical Questions
-          </Title>
-          <Collapse 
-            accordion 
-            bordered={false}
-            style={{ background: 'transparent' }}
-          >
-            {technical.map((tip) => (
-              <Panel
-                key={tip.id}
-                header={
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-                    <Tag color="green" style={{ fontSize: 13, padding: '4px 12px' }}>
-                      {tip.category}
-                    </Tag>
-                    <Tag color={getLevelColor(tip.level)} style={{ fontSize: 13, padding: '4px 12px' }}>
-                      {tip.level}
-                    </Tag>
-                    <Text strong style={{ flex: 1, fontSize: 15 }}>{tip.question}</Text>
-                  </div>
-                }
-                style={{ marginBottom: 16, border: '1px solid #d9d9d9', borderRadius: 12, background: 'white' }}
-              >
-                <div style={{ padding: '16px 0' }}>
-                  <div style={{ marginBottom: 20 }}>
-                    <Text strong style={{ color: '#1890ff', fontSize: 17 }}>💡 Mẹo trả lời:</Text>
-                    <Paragraph style={{ marginTop: 12, fontSize: 16, lineHeight: 1.9, color: '#333' }}>
-                      {tip.tip}
-                    </Paragraph>
-                  </div>
-                  <div>
-                    <Text strong style={{ color: '#52c41a', fontSize: 17 }}>✅ Câu trả lời mẫu:</Text>
-                    <Card 
-                      size="small" 
-                      style={{ marginTop: 12, background: '#fafafa', border: '1px dashed #d9d9d9', borderRadius: 8 }}
-                    >
-                      <Text style={{ fontSize: 15, fontStyle: 'italic', lineHeight: 1.8 }}>
-                        {tip.example}
-                      </Text>
-                    </Card>
-                  </div>
+        <div style={{ 
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))',
+          gap: 24
+        }}>
+          {modules.map((module, index) => (
+            <Card
+              key={module.module_id}
+              hoverable
+              style={{ 
+                borderRadius: 16,
+                border: '2px solid #e8e8e8',
+                height: '100%'
+              }}
+              bodyStyle={{ padding: 24 }}
+            >
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ 
+                  width: 56,
+                  height: 56,
+                  borderRadius: 12,
+                  background: 'linear-gradient(135deg, #1890ff 0%, #0050b3 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: 16
+                }}>
+                  <BookOutlined style={{ fontSize: 28, color: 'white' }} />
                 </div>
-              </Panel>
-            ))}
-          </Collapse>
-        </Col>
-      </Row>
+                
+                <Tag color="blue" style={{ marginBottom: 12 }}>
+                  {module.order_index ? `Module ${module.order_index}` : `Bài ${index + 1}`}
+                </Tag>
+                
+                <Title level={4} style={{ 
+                  fontSize: 18,
+                  marginBottom: 12,
+                  minHeight: 50
+                }}>
+                  {module.module_title}
+                </Title>
+                
+                <Text type="secondary" style={{ 
+                  fontSize: 14,
+                  display: 'block',
+                  marginBottom: 16,
+                  minHeight: 40
+                }}>
+                  {module.description || 'Kiểm tra kiến thức của bạn với 5 câu hỏi trắc nghiệm'}
+                </Text>
+              </div>
+
+              <div style={{ 
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                paddingTop: 16,
+                borderTop: '1px solid #f0f0f0'
+              }}>
+                <Space size={16}>
+                  <Space size={4}>
+                    <PlayCircleOutlined style={{ color: '#1890ff' }} />
+                    <Text type="secondary" style={{ fontSize: 13 }}>5 câu hỏi</Text>
+                  </Space>
+                  <Space size={4}>
+                    <TrophyOutlined style={{ color: '#faad14' }} />
+                    <Text type="secondary" style={{ fontSize: 13 }}>100 điểm</Text>
+                  </Space>
+                </Space>
+              </div>
+
+              <Button
+                type="primary"
+                size="large"
+                block
+                onClick={() => handleStartQuiz(module.module_id)}
+                style={{ 
+                  marginTop: 20,
+                  height: 44,
+                  borderRadius: 8,
+                  fontWeight: 600
+                }}
+              >
+                Bắt đầu ôn tập
+              </Button>
+            </Card>
+          ))}
+        </div>
+
+        {/* Info Box */}
+        <Card style={{ 
+          marginTop: 48,
+          borderRadius: 16,
+          background: 'linear-gradient(135deg, #fff7e6 0%, #ffffff 100%)',
+          border: '2px solid #ffd666'
+        }}>
+          <Space direction="vertical" size={12} style={{ width: '100%' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                background: '#faad14',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <TrophyOutlined style={{ fontSize: 20, color: 'white' }} />
+              </div>
+              <div>
+                <Text strong style={{ fontSize: 16, display: 'block' }}>
+                  💡 Mẹo làm bài
+                </Text>
+                <Text type="secondary" style={{ fontSize: 14 }}>
+                  Đọc kỹ câu hỏi trước khi chọn đáp án • Bạn có thể quay lại câu trước • Cần đạt 60% để đạt
+                </Text>
+              </div>
+            </div>
+          </Space>
+        </Card>
+      </div>
     </div>
   )
 }

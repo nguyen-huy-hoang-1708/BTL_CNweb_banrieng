@@ -11,10 +11,13 @@ import Register from './pages/Register'
 import Account from './pages/Account'
 import Admin from './pages/Admin'
 import CVs from './pages/CVs'
+import CVDetail from './pages/CVDetail'
 import Exercises from './pages/Exercises'
+import ExerciseQuiz from './pages/ExerciseQuiz'
 import Calendar from './pages/Calendar'
 import Progress from './pages/Progress'
 import Certificates from './pages/Certificates'
+import CertificateDetail from './pages/CertificateDetail'
 import Interviews from './pages/Interviews'
 import Business from './pages/Business'
 import Teach from './pages/Teach'
@@ -128,7 +131,7 @@ const App: React.FC = () => {
           menu={{
             items: [
               { key: 'courses', label: <Link to="/courses">Courses</Link> },
-              { key: 'exercises', label: <Link to="/exercises">Exercises</Link> },
+              { key: 'interviews', label: <Link to="/interviews">Interviews</Link> },
               { key: 'certificates', label: <Link to="/certificates">Certificates</Link> },
             ]
           }}
@@ -257,10 +260,13 @@ const App: React.FC = () => {
           <Route path="/account" element={<Account />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/cvs" element={<CVs />} />
+          <Route path="/cvs/:cvId" element={<CVDetail />} />
           <Route path="/exercises" element={<Exercises />} />
+          <Route path="/exercises/:moduleId" element={<ExerciseQuiz />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/progress" element={<Progress />} />
           <Route path="/certificates" element={<Certificates />} />
+          <Route path="/certificates/:certificateId" element={<CertificateDetail />} />
           <Route path="/interviews" element={<Interviews />} />
           <Route path="/business" element={<Business />} />
           <Route path="/teach" element={<Teach />} />

@@ -1,607 +1,399 @@
 import React, { useEffect, useState } from 'react'
-import { Row, Col, Card, Button, Modal, Form, Input, Select, Spin, Alert, Empty, Space, Typography, message, Tag, Divider } from 'antd'
-import { FileTextOutlined, PlusOutlined, UserOutlined, PhoneOutlined, MailOutlined, EnvironmentOutlined, TrophyOutlined, ProjectOutlined, BookOutlined, SaveOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons'
+import { Card, Spin, Alert, Button, Typography, Space, Empty } from 'antd'
+import { ArrowRightOutlined, FileTextOutlined, UserOutlined, TrophyOutlined } from '@ant-design/icons'
 import api from '../services/api'
+import { useNavigate } from 'react-router-dom'
 
-const { Title, Paragraph, Text } = Typography
-const { TextArea } = Input
+const { Title, Text } = Typography
 
 type CV = {
   cv_id: string
   cv_name: string
-  template_style?: string
   created_at: string
-  personal_info?: any
-  skills?: any
-  experience?: any
-  pdf_url?: string
+  template_style?: string
+  description?: string
+  status?: string
+  image?: string
 }
 
-type CVFormData = {
-  cv_name: string
-  template_style: string
+type UserInfo = {
+  user_id: string
   full_name: string
   email: string
-  phone: string
-  location: string
-  summary: string
-  education: string
-  experience: string
-  skills: string
+  created_at: string
+  current_level?: string
+  role?: string
+  avatar_url?: string
 }
 
 const CVs: React.FC = () => {
-  const [items, setItems] = useState<CV[]>([])
-  const [loading, setLoading] = useState(false)
+  const [user, setUser] = useState<UserInfo | null>(null)
+  const [cvs, setCVs] = useState<CV[]>([])
+  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [createMode, setCreateMode] = useState(false)
-  const [previewVisible, setPreviewVisible] = useState(false)
-  const [selectedCV, setSelectedCV] = useState<CV | null>(null)
-  const [form] = Form.useForm()
-  const [formValues, setFormValues] = useState<Partial<CVFormData>>({
-    template_style: 'modern',
-    full_name: '',
-    email: '',
-    phone: '',
-    location: '',
-    summary: '',
-    education: '',
-    experience: '',
-    skills: ''
-  })
+  const navigate = useNavigate()
+
+  // Dữ liệu mẫu cho CVs với ảnh minh họa
+  const sampleCVs: CV[] = [
+    {
+      cv_id: '1',
+      cv_name: 'Frontend Developer CV',
+      created_at: '2024-11-15',
+      template_style: 'Modern Professional',
+      description: 'A modern CV template perfect for frontend developers showcasing React, TypeScript, and UI/UX skills.',
+      status: 'Active',
+      image: 'https://marketplace.canva.com/EAFHblx_Y3Q/1/0/1131w/canva-black-white-minimalist-cv-resume-f5JNR8K2w2Y.jpg'
+    },
+    {
+      cv_id: '2',
+      cv_name: 'Full Stack Developer CV',
+      created_at: '2024-10-20',
+      template_style: 'Creative Tech',
+      description: 'Showcase your full-stack expertise with this comprehensive CV highlighting both frontend and backend skills.',
+      status: 'Active',
+      image: 'https://d.novoresume.com/images/doc/functional-resume-template.png'
+    },
+    {
+      cv_id: '3',
+      cv_name: 'Data Analyst CV',
+      created_at: '2024-09-05',
+      template_style: 'Professional Clean',
+      description: 'Professional CV template designed for data analysts emphasizing analytical skills and project outcomes.',
+      status: 'Active',
+      image: 'https://resumegenius.com/wp-content/uploads/entry-level-resume-template-freebie.png'
+    }
+  ]
 
   useEffect(() => {
-    loadCVs()
-  }, [])
+    const userId = localStorage.getItem('user_id')
+    if (!userId) {
+      setError('Please login to view CVs')
+      setLoading(false)
+      return
+    }
 
-  const loadCVs = () => {
-    setLoading(true)
-    api
-      .get('/api/cvs')
-      .then((res) => {
-        const data = res.data?.data || res.data || []
-        setItems(Array.isArray(data) ? data : [])
+    Promise.all([
+      api.get(`/api/auth/users/${userId}`),
+      api.get(`/api/cvs/user/${userId}`).catch(() => ({ data: [] }))
+    ])
+      .then(([userRes, cvsRes]) => {
+        setUser(userRes.data?.data || userRes.data)
+        const fetchedCVs = cvsRes.data?.data || cvsRes.data || []
+        // Nếu không có CVs từ API, dùng dữ liệu mẫu
+        setCVs(fetchedCVs.length > 0 ? fetchedCVs : sampleCVs)
       })
       .catch((err) => {
         setError(err.response?.data?.error || 'Failed to load CVs')
-        setItems([])
+        // Nếu có lỗi, vẫn hiển thị dữ liệu mẫu
+        setCVs(sampleCVs)
       })
-      .finally(() => setLoading(false))
-  }
-
-  const handleCreate = async (values: CVFormData) => {
-    try {
-      await api.post('/api/cvs', {
-        cv_name: values.cv_name,
-        template_style: values.template_style || 'modern',
-        personal_info: {
-          full_name: values.full_name,
-          email: values.email,
-          phone: values.phone,
-          location: values.location,
-          summary: values.summary
-        },
-        skills: values.skills,
-        experience: values.experience,
-        education: values.education
+      .finally(() => {
+        setLoading(false)
       })
-      message.success('CV created successfully!')
-      setCreateMode(false)
-      form.resetFields()
-      setFormValues({
-        template_style: 'modern',
-        full_name: '',
-        email: '',
-        phone: '',
-        location: '',
-        summary: '',
-        education: '',
-        experience: '',
-        skills: ''
-      })
-      loadCVs()
-    } catch (err: any) {
-      message.error(err.response?.data?.error || 'Failed to create CV')
-    }
-  }
+  }, [])
 
-  const handleFormChange = () => {
-    setFormValues(form.getFieldsValue())
-  }
-
-  const handlePreview = (cv: CV) => {
-    setSelectedCV(cv)
-    setPreviewVisible(true)
-  }
-
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
-      <Spin size="large" />
-    </div>
-  )
-  if (error) return <Alert type="error" message={error} showIcon style={{ margin: '40px 80px' }} />
-
-  // CV List View
-  if (!createMode) {
+  if (loading) {
     return (
-      <div style={{ padding: '40px 80px', maxWidth: 1400, margin: '0 auto', background: '#fafafa', minHeight: 'calc(100vh - 128px)' }}>
-        <div style={{ marginBottom: 40, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <Title level={1} style={{ fontSize: 42, fontWeight: 700, marginBottom: 12 }}>
-              <FileTextOutlined style={{ marginRight: 12, color: '#1890ff' }} />
-              My CVs
-            </Title>
-            <Paragraph style={{ fontSize: 18, color: '#666', marginBottom: 0 }}>
-              Create and manage your professional CVs
-            </Paragraph>
-          </div>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />} 
-            onClick={() => setCreateMode(true)} 
-            size="large"
-            style={{ height: 44, fontSize: 16, borderRadius: 8, padding: '0 24px' }}
-          >
-            Create New CV
-          </Button>
-        </div>
-
-        {items.length === 0 ? (
-          <Card style={{ borderRadius: 12, textAlign: 'center', padding: '60px 0', background: 'white' }}>
-            <Empty 
-              description={
-                <div>
-                  <div style={{ fontSize: 18, marginBottom: 12 }}>No CVs created yet</div>
-                  <Text type="secondary" style={{ fontSize: 15 }}>Create your first CV to get started!</Text>
-                </div>
-              }
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />} 
-              onClick={() => setCreateMode(true)}
-              size="large"
-              style={{ marginTop: 24, height: 44, fontSize: 16 }}
-            >
-              Create Your First CV
-            </Button>
-          </Card>
-        ) : (
-          <Row gutter={[24, 24]}>
-            {items.map((item) => (
-              <Col xs={24} sm={12} lg={8} key={item.cv_id}>
-                <Card
-                  hoverable
-                  style={{ 
-                    borderRadius: 12,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                    height: '100%',
-                    transition: 'all 0.3s'
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)'
-                    e.currentTarget.style.boxShadow = '0 8px 16px rgba(0,0,0,0.12)'
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)'
-                    e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)'
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'flex-start', marginBottom: 16 }}>
-                    <div style={{ 
-                      width: 56, 
-                      height: 56, 
-                      borderRadius: 12, 
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      marginRight: 16,
-                      flexShrink: 0
-                    }}>
-                      <FileTextOutlined style={{ fontSize: 28, color: 'white' }} />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Title level={4} style={{ margin: 0, fontSize: 18, fontWeight: 600, marginBottom: 8 }}>
-                        {item.cv_name}
-                      </Title>
-                      <Tag color="blue" style={{ marginBottom: 8 }}>{item.template_style || 'Default'}</Tag>
-                      <div style={{ fontSize: 13, color: '#999' }}>
-                        Created: {new Date(item.created_at).toLocaleDateString()}
-                      </div>
-                    </div>
-                  </div>
-                  <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-                    <Button 
-                      type="default" 
-                      icon={<EyeOutlined />} 
-                      onClick={() => handlePreview(item)}
-                      style={{ height: 38, fontSize: 14 }}
-                    >
-                      Preview
-                    </Button>
-                    {item.pdf_url && (
-                      <Button 
-                        type="primary"
-                        icon={<DownloadOutlined />}
-                        href={item.pdf_url}
-                        target="_blank"
-                        style={{ height: 38, fontSize: 14 }}
-                      >
-                        Download
-                      </Button>
-                    )}
-                  </Space>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        )}
-
-        <Modal
-          title={
-            <div style={{ display: 'flex', alignItems: 'center', fontSize: 20, fontWeight: 600 }}>
-              <EyeOutlined style={{ marginRight: 12, color: '#1890ff' }} />
-              {selectedCV?.cv_name}
-            </div>
-          }
-          open={previewVisible}
-          onCancel={() => setPreviewVisible(false)}
-          footer={[
-            <Button key="close" onClick={() => setPreviewVisible(false)} style={{ height: 44, fontSize: 16 }}>
-              Close
-            </Button>,
-            selectedCV?.pdf_url && (
-              <Button key="download" type="primary" icon={<DownloadOutlined />} href={selectedCV.pdf_url} target="_blank" style={{ height: 44, fontSize: 16 }}>
-                Download PDF
-              </Button>
-            ),
-          ]}
-          width={800}
-        >
-          {selectedCV && (
-            <div style={{ padding: '16px 0' }}>
-              <div style={{ marginBottom: 24 }}>
-                <Text strong style={{ fontSize: 15 }}>Template: </Text>
-                <Tag color="blue">{selectedCV.template_style || 'Default'}</Tag>
-              </div>
-              <div style={{ marginBottom: 24 }}>
-                <Text strong style={{ fontSize: 15 }}>Created: </Text>
-                <Text style={{ fontSize: 15 }}>{new Date(selectedCV.created_at).toLocaleString()}</Text>
-              </div>
-              {selectedCV.personal_info && (
-                <div style={{ marginBottom: 24 }}>
-                  <Text strong style={{ fontSize: 15, display: 'block', marginBottom: 12 }}>Personal Information:</Text>
-                  <div style={{ paddingLeft: 16 }}>
-                    <Text style={{ fontSize: 15, display: 'block', marginBottom: 8 }}>
-                      {selectedCV.personal_info.full_name}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 14, display: 'block', marginBottom: 4 }}>
-                      {selectedCV.personal_info.email}
-                    </Text>
-                    <Text type="secondary" style={{ fontSize: 14, display: 'block' }}>
-                      {selectedCV.personal_info.phone}
-                    </Text>
-                  </div>
-                </div>
-              )}
-              {selectedCV.skills && (
-                <div>
-                  <Text strong style={{ fontSize: 15, display: 'block', marginBottom: 12 }}>Skills:</Text>
-                  <div style={{ paddingLeft: 16 }}>
-                    <Text style={{ fontSize: 14 }}>{typeof selectedCV.skills === 'string' ? selectedCV.skills : JSON.stringify(selectedCV.skills)}</Text>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-        </Modal>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <Spin size="large" />
       </div>
     )
   }
 
-  // CV Builder View (TopCV-style)
+  if (error) {
+    return (
+      <div style={{ padding: '24px', maxWidth: 800, margin: '0 auto' }}>
+        <Alert type="error" message={error} showIcon />
+      </div>
+    )
+  }
+
+  const categories = [
+    { name: 'Modern Templates', icon: '🎨', color: '#1890ff' },
+    { name: 'Professional Templates', icon: '💼', color: '#52c41a' },
+    { name: 'Creative Templates', icon: '✨', color: '#722ed1' },
+    { name: 'Technical Templates', icon: '💻', color: '#fa8c16' },
+    { name: 'Executive Templates', icon: '👔', color: '#13c2c2' },
+    { name: 'Student Templates', icon: '🎓', color: '#eb2f96' }
+  ]
+
   return (
-    <div style={{ background: '#f5f5f5', minHeight: 'calc(100vh - 64px)' }}>
-      {/* Header Bar */}
+    <div style={{ 
+      minHeight: 'calc(100vh - 64px)',
+      background: '#f5f7fa'
+    }}>
+      {/* Hero Section */}
       <div style={{ 
-        background: 'white', 
-        padding: '16px 40px', 
-        boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center'
+        background: 'linear-gradient(135deg, #e8f4f8 0%, #f5f5f5 100%)',
+        padding: '80px 24px',
+        borderBottom: '1px solid #e0e0e0'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Button 
-            onClick={() => setCreateMode(false)} 
-            style={{ marginRight: 16 }}
-          >
-            ← Back to CVs
-          </Button>
-          <Title level={3} style={{ margin: 0, fontSize: 20 }}>
-            <FileTextOutlined style={{ marginRight: 8, color: '#1890ff' }} />
-            Create New CV
+        <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+          <Title level={1} style={{ 
+            fontSize: 48,
+            fontWeight: 700,
+            marginBottom: 16,
+            color: '#1a1a1a'
+          }}>
+            Professional CVs
           </Title>
+          <Text style={{ fontSize: 18, color: '#666' }}>
+            Create your professional CV to showcase your skills and experience
+          </Text>
         </div>
-        <Space>
-          <Button 
-            icon={<SaveOutlined />} 
-            onClick={() => form.submit()}
-            type="primary"
-            size="large"
-            style={{ height: 44, fontSize: 16 }}
-          >
-            Save CV
-          </Button>
-        </Space>
       </div>
 
-      {/* Form + Preview Layout */}
-      <div style={{ display: 'flex', padding: '24px', gap: 24, maxWidth: 1600, margin: '0 auto' }}>
-        {/* Left: Form Section */}
-        <div style={{ 
-          width: 480, 
-          flexShrink: 0,
-          maxHeight: 'calc(100vh - 140px)',
-          overflowY: 'auto',
-          padding: '0 8px'
-        }}>
-          <Form 
-            form={form} 
-            layout="vertical" 
-            onFinish={handleCreate}
-            onValuesChange={handleFormChange}
-            initialValues={formValues}
-          >
-            <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-              <Title level={4} style={{ fontSize: 18, marginBottom: 16 }}>
-                <FileTextOutlined style={{ marginRight: 8, color: '#1890ff' }} />
-                Basic Information
-              </Title>
-              <Form.Item 
-                name="cv_name" 
-                label="CV Name" 
-                rules={[{ required: true, message: 'Please enter CV name' }]}
-              >
-                <Input size="large" placeholder="e.g., Software Engineer CV" />
-              </Form.Item>
-              <Form.Item name="template_style" label="Template Style" initialValue="modern">
-                <Select size="large">
-                  <Select.Option value="modern">🎨 Modern</Select.Option>
-                  <Select.Option value="classic">📄 Classic</Select.Option>
-                  <Select.Option value="minimal">✨ Minimal</Select.Option>
-                </Select>
-              </Form.Item>
-            </Card>
+      {/* Main Content */}
+      <div style={{ 
+        maxWidth: 1200, 
+        margin: '0 auto',
+        padding: '48px 24px',
+        display: 'grid',
+        gridTemplateColumns: '1fr 380px',
+        gap: 48
+      }}>
+        {/* Left Column - CVs List */}
+        <div>
+          <Title level={2} style={{ 
+            fontSize: 28,
+            fontWeight: 700,
+            marginBottom: 32,
+            color: '#1a1a1a'
+          }}>
+            My CVs
+          </Title>
 
-            <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-              <Title level={4} style={{ fontSize: 18, marginBottom: 16 }}>
-                <UserOutlined style={{ marginRight: 8, color: '#52c41a' }} />
-                Personal Details
-              </Title>
-              <Form.Item 
-                name="full_name" 
-                label="Full Name"
-                rules={[{ required: true, message: 'Please enter your full name' }]}
-              >
-                <Input size="large" prefix={<UserOutlined />} placeholder="John Doe" />
-              </Form.Item>
-              <Form.Item 
-                name="email" 
-                label="Email"
-                rules={[
-                  { required: true, message: 'Please enter your email' },
-                  { type: 'email', message: 'Please enter a valid email' }
-                ]}
-              >
-                <Input size="large" prefix={<MailOutlined />} placeholder="john@example.com" />
-              </Form.Item>
-              <Form.Item name="phone" label="Phone">
-                <Input size="large" prefix={<PhoneOutlined />} placeholder="+1 234 567 8900" />
-              </Form.Item>
-              <Form.Item name="location" label="Location">
-                <Input size="large" prefix={<EnvironmentOutlined />} placeholder="New York, USA" />
-              </Form.Item>
-              <Form.Item name="summary" label="Professional Summary">
-                <TextArea 
-                  rows={4} 
-                  placeholder="Brief summary about your professional background..."
-                  style={{ fontSize: 15 }}
-                />
-              </Form.Item>
-            </Card>
+          {cvs.length > 0 ? (
+            <Space direction="vertical" size={24} style={{ width: '100%' }}>
+              {cvs.map((cv) => (
+                <Card 
+                  key={cv.cv_id}
+                  style={{ 
+                    borderRadius: 8,
+                    border: '1px solid #e0e0e0',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.08)'
+                  }}
+                  bodyStyle={{ padding: 24 }}
+                >
+                  <div style={{ display: 'flex', gap: 24 }}>
+                    {/* CV Preview Image */}
+                    <div style={{
+                      width: 120,
+                      height: 160,
+                      background: cv.image ? 'white' : '#f5f5f5',
+                      borderRadius: 8,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                      overflow: 'hidden',
+                      border: '1px solid #f0f0f0'
+                    }}>
+                      {cv.image ? (
+                        <img 
+                          src={cv.image} 
+                          alt={cv.cv_name}
+                          style={{ 
+                            width: '100%', 
+                            height: '100%', 
+                            objectFit: 'cover'
+                          }}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none'
+                            e.currentTarget.parentElement!.innerHTML = '<span style="font-size: 40px; color: #1890ff;">📄</span>'
+                          }}
+                        />
+                      ) : (
+                        <FileTextOutlined style={{ fontSize: 40, color: '#1890ff' }} />
+                      )}
+                    </div>
 
-            <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-              <Title level={4} style={{ fontSize: 18, marginBottom: 16 }}>
-                <BookOutlined style={{ marginRight: 8, color: '#faad14' }} />
-                Education
-              </Title>
-              <Form.Item name="education" label="Education Background">
-                <TextArea 
-                  rows={5} 
-                  placeholder="e.g., Bachelor of Computer Science&#10;University Name, 2018-2022&#10;GPA: 3.8/4.0"
-                  style={{ fontSize: 15 }}
-                />
-              </Form.Item>
-            </Card>
+                    {/* Content */}
+                    <div style={{ flex: 1 }}>
+                      <Title level={4} style={{ 
+                        fontSize: 18,
+                        fontWeight: 600,
+                        marginBottom: 8,
+                        color: '#1a1a1a'
+                      }}>
+                        {cv.cv_name}
+                      </Title>
+                      
+                      <Text type="secondary" style={{ 
+                        display: 'block',
+                        fontSize: 14,
+                        marginBottom: 4
+                      }}>
+                        {cv.template_style || 'Custom Template'}
+                      </Text>
 
-            <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-              <Title level={4} style={{ fontSize: 18, marginBottom: 16 }}>
-                <ProjectOutlined style={{ marginRight: 8, color: '#722ed1' }} />
-                Work Experience
-              </Title>
-              <Form.Item name="experience" label="Professional Experience">
-                <TextArea 
-                  rows={6} 
-                  placeholder="e.g., Software Engineer&#10;Company Name, 2022-Present&#10;- Developed web applications using React&#10;- Collaborated with team of 5 developers"
-                  style={{ fontSize: 15 }}
-                />
-              </Form.Item>
-            </Card>
+                      <Text type="secondary" style={{ 
+                        display: 'block',
+                        fontSize: 14,
+                        marginBottom: 8
+                      }}>
+                        Created: {cv.created_at ? new Date(cv.created_at).toLocaleDateString('vi-VN') : 'N/A'}
+                      </Text>
 
-            <Card style={{ borderRadius: 12, marginBottom: 16 }}>
-              <Title level={4} style={{ fontSize: 18, marginBottom: 16 }}>
-                <TrophyOutlined style={{ marginRight: 8, color: '#eb2f96' }} />
-                Skills
-              </Title>
-              <Form.Item 
-                name="skills" 
-                label="Technical & Soft Skills"
-                extra="Separate skills with commas"
+                      <Text style={{ 
+                        display: 'block',
+                        fontSize: 14,
+                        color: '#595959',
+                        marginBottom: 16
+                      }}>
+                        {cv.description || 'Your professional CV ready to impress employers.'}
+                      </Text>
+
+                      <Button 
+                        type="link"
+                        style={{ 
+                          padding: 0,
+                          fontSize: 14,
+                          fontWeight: 600,
+                          color: '#1890ff',
+                          height: 'auto'
+                        }}
+                        onClick={() => navigate(`/cvs/${cv.cv_id}`)}
+                      >
+                        View CV <ArrowRightOutlined style={{ fontSize: 12 }} />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </Space>
+          ) : (
+            <Card style={{ borderRadius: 8, textAlign: 'center', padding: '60px 24px' }}>
+              <Empty 
+                description={
+                  <div>
+                    <Title level={4} style={{ color: '#999', marginBottom: 8 }}>
+                      No CVs yet
+                    </Title>
+                    <Text type="secondary">
+                      Create your first professional CV to start your career journey
+                    </Text>
+                  </div>
+                }
+              />
+              <Button 
+                type="primary"
+                size="large"
+                style={{ marginTop: 24 }}
+                onClick={() => navigate('/roadmaps')}
               >
-                <TextArea 
-                  rows={3} 
-                  placeholder="JavaScript, React, Node.js, TypeScript, Communication, Problem Solving"
-                  style={{ fontSize: 15 }}
-                />
-              </Form.Item>
+                Create CV
+              </Button>
             </Card>
-          </Form>
+          )}
+
+          {cvs.length > 0 && (
+            <Button 
+              type="link"
+              style={{ 
+                marginTop: 32,
+                fontSize: 16,
+                fontWeight: 600,
+                color: '#1890ff',
+                padding: 0
+              }}
+            >
+              View all CVs ({cvs.length}) <ArrowRightOutlined />
+            </Button>
+          )}
         </div>
 
-        {/* Right: Live Preview Section */}
-        <div style={{ flex: 1, minWidth: 0 }}>
+        {/* Right Column - Category Sidebar */}
+        <div>
           <Card 
             style={{ 
-              borderRadius: 12,
-              minHeight: 'calc(100vh - 140px)',
-              background: 'white',
-              boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
+              borderRadius: 8,
+              border: '1px solid #e0e0e0',
+              position: 'sticky',
+              top: 24
             }}
+            bodyStyle={{ padding: 24 }}
           >
-            <div style={{ 
-              maxWidth: 800, 
-              margin: '0 auto',
-              padding: '40px',
-              background: 'white',
-              minHeight: '100%'
+            <Title level={3} style={{ 
+              fontSize: 20,
+              fontWeight: 700,
+              marginBottom: 24,
+              color: '#1a1a1a'
             }}>
-              {/* CV Preview Header */}
-              <div style={{ textAlign: 'center', marginBottom: 40, paddingBottom: 32, borderBottom: '3px solid #1890ff' }}>
-                <Title level={1} style={{ 
-                  fontSize: 36, 
-                  fontWeight: 700, 
-                  marginBottom: 8,
-                  color: '#1890ff'
-                }}>
-                  {formValues.full_name || 'Your Name'}
-                </Title>
-                <Space split={<span style={{ color: '#ddd' }}>|</span>} style={{ fontSize: 15, color: '#666' }}>
-                  {formValues.email && (
-                    <span><MailOutlined style={{ marginRight: 6 }} />{formValues.email}</span>
-                  )}
-                  {formValues.phone && (
-                    <span><PhoneOutlined style={{ marginRight: 6 }} />{formValues.phone}</span>
-                  )}
-                  {formValues.location && (
-                    <span><EnvironmentOutlined style={{ marginRight: 6 }} />{formValues.location}</span>
-                  )}
-                </Space>
-              </div>
+              Explore CV templates by style
+            </Title>
 
-              {/* Professional Summary */}
-              {formValues.summary && (
-                <div style={{ marginBottom: 32 }}>
-                  <Title level={3} style={{ 
-                    fontSize: 20, 
-                    fontWeight: 600, 
-                    color: '#1890ff',
-                    marginBottom: 12,
-                    paddingBottom: 8,
-                    borderBottom: '2px solid #e8e8e8'
-                  }}>
-                    Professional Summary
-                  </Title>
-                  <Paragraph style={{ fontSize: 15, lineHeight: 1.8, color: '#555' }}>
-                    {formValues.summary}
-                  </Paragraph>
-                </div>
-              )}
+            <Space direction="vertical" size={12} style={{ width: '100%' }}>
+              {categories.map((category, index) => (
+                <Button
+                  key={index}
+                  block
+                  size="large"
+                  style={{
+                    height: 'auto',
+                    padding: '16px 20px',
+                    textAlign: 'left',
+                    border: '1px solid #e0e0e0',
+                    borderRadius: 8,
+                    background: 'white',
+                    transition: 'all 0.3s',
+                    cursor: 'pointer'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = category.color
+                    e.currentTarget.style.boxShadow = `0 2px 8px ${category.color}33`
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#e0e0e0'
+                    e.currentTarget.style.boxShadow = 'none'
+                  }}
+                  onClick={() => navigate('/roadmaps')}
+                >
+                  <Space>
+                    <span style={{ fontSize: 24 }}>{category.icon}</span>
+                    <Text style={{ 
+                      fontSize: 15,
+                      fontWeight: 500,
+                      color: '#1a1a1a'
+                    }}>
+                      {category.name}
+                    </Text>
+                  </Space>
+                </Button>
+              ))}
+            </Space>
 
-              {/* Education */}
-              {formValues.education && (
-                <div style={{ marginBottom: 32 }}>
-                  <Title level={3} style={{ 
-                    fontSize: 20, 
-                    fontWeight: 600, 
-                    color: '#1890ff',
-                    marginBottom: 12,
-                    paddingBottom: 8,
-                    borderBottom: '2px solid #e8e8e8'
-                  }}>
-                    <BookOutlined style={{ marginRight: 8 }} />
-                    Education
-                  </Title>
-                  <Paragraph style={{ fontSize: 15, lineHeight: 1.8, color: '#555', whiteSpace: 'pre-line' }}>
-                    {formValues.education}
-                  </Paragraph>
-                </div>
-              )}
-
-              {/* Work Experience */}
-              {formValues.experience && (
-                <div style={{ marginBottom: 32 }}>
-                  <Title level={3} style={{ 
-                    fontSize: 20, 
-                    fontWeight: 600, 
-                    color: '#1890ff',
-                    marginBottom: 12,
-                    paddingBottom: 8,
-                    borderBottom: '2px solid #e8e8e8'
-                  }}>
-                    <ProjectOutlined style={{ marginRight: 8 }} />
-                    Work Experience
-                  </Title>
-                  <Paragraph style={{ fontSize: 15, lineHeight: 1.8, color: '#555', whiteSpace: 'pre-line' }}>
-                    {formValues.experience}
-                  </Paragraph>
-                </div>
-              )}
-
-              {/* Skills */}
-              {formValues.skills && (
-                <div style={{ marginBottom: 32 }}>
-                  <Title level={3} style={{ 
-                    fontSize: 20, 
-                    fontWeight: 600, 
-                    color: '#1890ff',
-                    marginBottom: 12,
-                    paddingBottom: 8,
-                    borderBottom: '2px solid #e8e8e8'
-                  }}>
-                    <TrophyOutlined style={{ marginRight: 8 }} />
-                    Skills
-                  </Title>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                    {formValues.skills.split(',').map((skill, idx) => (
-                      <Tag 
-                        key={idx} 
-                        color="blue" 
-                        style={{ 
-                          fontSize: 14, 
-                          padding: '4px 12px',
-                          borderRadius: 6,
-                          marginBottom: 0
-                        }}
-                      >
-                        {skill.trim()}
-                      </Tag>
-                    ))}
+            {/* Additional Info */}
+            <div style={{ 
+              marginTop: 32,
+              padding: 20,
+              background: '#f9f9f9',
+              borderRadius: 8
+            }}>
+              <Space direction="vertical" size={12} style={{ width: '100%' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <UserOutlined style={{ fontSize: 20, color: '#1890ff' }} />
+                  <div>
+                    <Text strong style={{ display: 'block', fontSize: 14 }}>
+                      ATS-Friendly Templates
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 13 }}>
+                      Optimized for applicant tracking systems
+                    </Text>
                   </div>
                 </div>
-              )}
-
-              {/* Empty State */}
-              {!formValues.full_name && !formValues.email && !formValues.summary && (
-                <div style={{ textAlign: 'center', padding: '60px 20px', color: '#999' }}>
-                  <FileTextOutlined style={{ fontSize: 64, marginBottom: 16, opacity: 0.3 }} />
-                  <Paragraph style={{ fontSize: 16 }}>
-                    Start filling out the form to see your CV preview
-                  </Paragraph>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <TrophyOutlined style={{ fontSize: 20, color: '#faad14' }} />
+                  <div>
+                    <Text strong style={{ display: 'block', fontSize: 14 }}>
+                      Professional Design
+                    </Text>
+                    <Text type="secondary" style={{ fontSize: 13 }}>
+                      Stand out with modern layouts
+                    </Text>
+                  </div>
                 </div>
-              )}
+              </Space>
             </div>
           </Card>
         </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { Card, Progress, Spin, Alert, Empty, Typography, Space, Row, Col, Statistic, Tag } from 'antd'
-import { TrophyOutlined, BookOutlined, CheckCircleOutlined, ClockCircleOutlined, RocketOutlined } from '@ant-design/icons'
+import { Card, Progress, Spin, Alert, Empty, Typography, Space, Row, Col, Statistic, Tag, Button } from 'antd'
+import { TrophyOutlined, BookOutlined, CheckCircleOutlined, ClockCircleOutlined, RocketOutlined, ArrowRightOutlined } from '@ant-design/icons'
+import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
 
 const { Title, Text, Paragraph } = Typography
@@ -9,11 +10,13 @@ type ModuleWithProgress = {
   module_id: string
   title: string
   roadmap_title: string
+  roadmap_id: string
   status: string
   completion_percentage: number
 }
 
 const ProgressPage: React.FC = () => {
+  const navigate = useNavigate()
   const [items, setItems] = useState<ModuleWithProgress[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -45,6 +48,7 @@ const ProgressPage: React.FC = () => {
                 module_id: module.module_id,
                 title: module.title,
                 roadmap_title: roadmap.title,
+                roadmap_id: roadmap.roadmap_id,
                 status: 'not_started',
                 completion_percentage: 0
               })
@@ -75,26 +79,20 @@ const ProgressPage: React.FC = () => {
 
   return (
     <div style={{ padding: '40px 80px', maxWidth: 1600, margin: '0 auto', background: '#f8f9fa', minHeight: 'calc(100vh - 128px)' }}>
-      <div style={{ marginBottom: 40 }}>
+      <div style={{ marginBottom: 40, textAlign: 'center' }}>
         <Title level={1} style={{ 
-          fontSize: 42, 
-          fontWeight: 700, 
-          marginBottom: 12,
+          fontSize: 52, 
+          fontWeight: 800, 
+          marginBottom: 16,
+          fontFamily: "'Poppins', 'Segoe UI', 'Roboto', sans-serif",
           background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
           WebkitBackgroundClip: 'text',
           WebkitTextFillColor: 'transparent',
-          display: 'inline-flex',
-          alignItems: 'center'
+          display: 'inline-block'
         }}>
-          <span style={{ 
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent'
-          }}>
-            📊 My Learning Progress
-          </span>
+           My Learning Progress
         </Title>
-        <Paragraph style={{ fontSize: 17, color: '#666', marginBottom: 0 }}>
+        <Paragraph style={{ fontSize: 18, color: '#666', marginBottom: 0, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>
           Track your progress across different courses and modules
         </Paragraph>
       </div>
@@ -107,9 +105,10 @@ const ProgressPage: React.FC = () => {
             style={{ 
               borderRadius: 16, 
               boxShadow: '0 4px 12px rgba(102, 126, 234, 0.15)', 
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+              background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.95) 100%), url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80") center/cover',
               border: 'none',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s',
+              overflow: 'hidden'
             }}
             bodyStyle={{ padding: '24px' }}
             onMouseEnter={(e) => {
@@ -122,7 +121,7 @@ const ProgressPage: React.FC = () => {
             }}
           >
             <Statistic
-              title={<span style={{ color: 'rgba(255,255,255,0.95)', fontSize: 15, fontWeight: 500, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Total Modules</span>}
+              title={<span style={{ color: 'rgba(255,255,255,0.05)', fontSize: 15, fontWeight: 500, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Total Modules</span>}
               value={items.length}
               valueStyle={{ color: 'white', fontSize: 36, fontWeight: 700, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}
               prefix={<BookOutlined style={{ fontSize: 28, color: 'white', marginRight: 8 }} />}
@@ -135,9 +134,10 @@ const ProgressPage: React.FC = () => {
             style={{ 
               borderRadius: 16, 
               boxShadow: '0 4px 12px rgba(82, 196, 26, 0.15)', 
-              background: 'linear-gradient(135deg, #52c41a 0%, #237804 100%)',
+              background: 'linear-gradient(135deg, rgba(82, 196, 26, 0.05) 0%, rgba(35, 120, 4, 0.95) 100%), url("https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=800&q=80") center/cover',
               border: 'none',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s',
+              overflow: 'hidden'
             }}
             bodyStyle={{ padding: '24px' }}
             onMouseEnter={(e) => {
@@ -150,7 +150,7 @@ const ProgressPage: React.FC = () => {
             }}
           >
             <Statistic
-              title={<span style={{ color: 'rgba(255,255,255,0.95)', fontSize: 15, fontWeight: 500, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Completed</span>}
+              title={<span style={{ color: 'rgba(255,255,255,0.05)', fontSize: 15, fontWeight: 500, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Completed</span>}
               value={completedCount}
               valueStyle={{ color: 'white', fontSize: 36, fontWeight: 700, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}
               prefix={<CheckCircleOutlined style={{ fontSize: 28, color: 'white', marginRight: 8 }} />}
@@ -163,9 +163,10 @@ const ProgressPage: React.FC = () => {
             style={{ 
               borderRadius: 16, 
               boxShadow: '0 4px 12px rgba(24, 144, 255, 0.15)', 
-              background: 'linear-gradient(135deg, #1890ff 0%, #0050b3 100%)',
+              background: 'linear-gradient(135deg, rgba(24, 144, 255, 0.05) 0%, rgba(0, 80, 179, 0.95) 100%), url("https://images.unsplash.com/photo-1501504905252-473c47e087f8?w=800&q=80") center/cover',
               border: 'none',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s',
+              overflow: 'hidden'
             }}
             bodyStyle={{ padding: '24px' }}
             onMouseEnter={(e) => {
@@ -178,7 +179,7 @@ const ProgressPage: React.FC = () => {
             }}
           >
             <Statistic
-              title={<span style={{ color: 'rgba(255,255,255,0.95)', fontSize: 15, fontWeight: 500, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>In Progress</span>}
+              title={<span style={{ color: 'rgba(255,255,255,0.05)', fontSize: 15, fontWeight: 500, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>In Progress</span>}
               value={inProgressCount}
               valueStyle={{ color: 'white', fontSize: 36, fontWeight: 700, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}
               prefix={<RocketOutlined style={{ fontSize: 28, color: 'white', marginRight: 8 }} />}
@@ -191,9 +192,10 @@ const ProgressPage: React.FC = () => {
             style={{ 
               borderRadius: 16, 
               boxShadow: '0 4px 12px rgba(250, 173, 20, 0.15)', 
-              background: 'linear-gradient(135deg, #faad14 0%, #d46b08 100%)',
+              background: 'linear-gradient(135deg, rgba(250, 173, 20, 0.05) 0%, rgba(212, 107, 8, 0.95) 100%), url("https://images.unsplash.com/photo-1553531384-cc64ac80f931?w=800&q=80") center/cover',
               border: 'none',
-              transition: 'all 0.3s'
+              transition: 'all 0.3s',
+              overflow: 'hidden'
             }}
             bodyStyle={{ padding: '24px' }}
             onMouseEnter={(e) => {
@@ -206,7 +208,7 @@ const ProgressPage: React.FC = () => {
             }}
           >
             <Statistic
-              title={<span style={{ color: 'rgba(255,255,255,0.95)', fontSize: 15, fontWeight: 500, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Not Started</span>}
+              title={<span style={{ color: 'rgba(255,255,255,0.05)', fontSize: 15, fontWeight: 500, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}>Not Started</span>}
               value={notStartedCount}
               valueStyle={{ color: 'white', fontSize: 36, fontWeight: 700, fontFamily: "'Segoe UI', 'Roboto', sans-serif" }}
               prefix={<ClockCircleOutlined style={{ fontSize: 28, color: 'white', marginRight: 8 }} />}
@@ -236,10 +238,10 @@ const ProgressPage: React.FC = () => {
             padding: '0 4px'
           }}>
             <Title level={2} style={{ 
-              fontSize: 28, 
+              fontSize: 32, 
               marginBottom: 0, 
-              fontWeight: 700,
-              fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+              fontWeight: 800,
+              fontFamily: "'Poppins', 'Segoe UI', 'Roboto', sans-serif"
             }}>
               📚 Course Modules
             </Title>
@@ -249,6 +251,7 @@ const ProgressPage: React.FC = () => {
               <Col xs={24} sm={12} lg={8} key={item.module_id}>
                 <Card 
                   hoverable
+                  onClick={() => navigate(`/roadmaps/${item.roadmap_id}/modules/${item.module_id}`)}
                   style={{ 
                     borderRadius: 16,
                     boxShadow: '0 4px 12px rgba(0,0,0,0.06)',
@@ -256,7 +259,8 @@ const ProgressPage: React.FC = () => {
                     transition: 'all 0.3s',
                     background: 'white',
                     border: '1px solid #f0f0f0',
-                    overflow: 'hidden'
+                    overflow: 'hidden',
+                    cursor: 'pointer'
                   }}
                   bodyStyle={{ padding: '28px' }}
                   onMouseEnter={(e) => {
@@ -272,20 +276,22 @@ const ProgressPage: React.FC = () => {
                 >
                   <Space direction="vertical" style={{ width: '100%' }} size="large">
                     <div>
-                      <Tag 
-                        color="blue" 
-                        style={{ 
-                          fontSize: 13, 
-                          padding: '4px 12px',
-                          borderRadius: 8,
-                          marginBottom: 12,
-                          fontWeight: 500,
-                          border: 'none',
-                          fontFamily: "'Segoe UI', 'Roboto', sans-serif"
-                        }}
-                      >
-                        {item.roadmap_title}
-                      </Tag>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                        <Tag 
+                          color="blue" 
+                          style={{ 
+                            fontSize: 13, 
+                            padding: '4px 12px',
+                            borderRadius: 8,
+                            fontWeight: 500,
+                            border: 'none',
+                            fontFamily: "'Segoe UI', 'Roboto', sans-serif"
+                          }}
+                        >
+                          {item.roadmap_title}
+                        </Tag>
+                        <ArrowRightOutlined style={{ fontSize: 16, color: '#1890ff' }} />
+                      </div>
                       <Title level={4} style={{ 
                         margin: 0, 
                         fontSize: 20, 

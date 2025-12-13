@@ -1,276 +1,454 @@
-import React, { useEffect, useState } from 'react'
-import { List, Card, Tag, Button, Modal, Form, Input, Select, message, Empty, Avatar, Typography, Space } from 'antd'
-import { UserOutlined, PlusOutlined, MessageOutlined, ClockCircleOutlined } from '@ant-design/icons'
+import React, { useState, useEffect } from 'react'
+import { Input, Typography, Space, Card, Empty, Button } from 'antd'
+import { SendOutlined, PlusOutlined, HistoryOutlined, BookOutlined, CodeOutlined, CompassOutlined } from '@ant-design/icons'
 import api from '../services/api'
 
 const { Title, Text } = Typography
 
-type InterviewSession = {
-  session_id: string
-  session_name: string
-  interview_type: string
-  score?: number
-  created_at: string
+type ChatMessage = {
+  id: string
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+}
+
+type UserInfo = {
+  user_id: string
+  full_name: string
+  email: string
+  avatar_url?: string
 }
 
 const Interviews: React.FC = () => {
-  const [items, setItems] = useState<InterviewSession[]>([])
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [inputValue, setInputValue] = useState('')
   const [loading, setLoading] = useState(false)
-  const [modalVisible, setModalVisible] = useState(false)
-  const [selectedSession, setSelectedSession] = useState<InterviewSession | null>(null)
-  const [form] = Form.useForm()
-
-  const fetchInterviews = async () => {
-    setLoading(true)
-    try {
-      const res = await api.get('/api/interviews/sessions')
-      const data = res.data?.data || res.data || []
-      setItems(Array.isArray(data) ? data : [])
-    } catch (err: any) {
-      message.error(err.response?.data?.error || 'Failed to load interviews')
-      setItems([])
-    } finally {
-      setLoading(false)
-    }
-  }
+  const [user, setUser] = useState<UserInfo | null>(null)
 
   useEffect(() => {
-    fetchInterviews()
+    const userId = localStorage.getItem('user_id')
+    if (userId) {
+      api.get(`/api/auth/users/${userId}`)
+        .then((res) => {
+          setUser(res.data?.data || res.data)
+        })
+        .catch((err) => {
+          console.error('Failed to load user:', err)
+        })
+    }
   }, [])
 
-  const onCreate = async (values: any) => {
-    try {
-      await api.post('/api/interviews/sessions', values)
-      message.success('Interview session created!')
-      setModalVisible(false)
-      form.resetFields()
-      fetchInterviews()
-    } catch (err: any) {
-      message.error(err.response?.data?.error || 'Failed to create session')
+  const samplePrompts = [
+    'Viết nội dung câu lỏng',
+    'Từ vị theo giỏ sinh',
+    'Hướng dẫn về hình chiếu'
+  ]
+
+  const chatHistory = [
+    'TTCS',
+    'CV Quang',
+    'Bài tập về nhà'
+  ]
+
+  const gptOptions = [
+    { name: 'Khám phá', icon: <CompassOutlined /> },
+    { name: 'Video AI by invideo', icon: <BookOutlined /> },
+    { name: 'Canva', icon: <CodeOutlined /> },
+    { name: 'Việt Nam GPT', icon: <HistoryOutlined /> }
+  ]
+
+  const handleSend = async () => {
+    if (!inputValue.trim()) return
+
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: inputValue,
+      timestamp: new Date()
     }
+
+    setMessages([...messages, userMessage])
+    setInputValue('')
+    setLoading(true)
+
+    // Simulate AI response
+    setTimeout(() => {
+      const aiMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Đây là câu trả lời mẫu cho câu hỏi phỏng vấn của bạn. Trong thực tế, đây sẽ được thay thế bằng AI response thực sự.',
+        timestamp: new Date()
+      }
+      setMessages(prev => [...prev, aiMessage])
+      setLoading(false)
+    }, 1000)
   }
 
-  const getTypeColor = (type: string) => {
-    return type === 'simulated' ? '#1890ff' : '#52c41a'
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
   }
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 128px)', background: '#f5f5f5' }}>
-      {/* Sidebar - Session List */}
+    <div style={{ 
+      display: 'flex',
+      height: 'calc(100vh - 64px)',
+      background: '#f9f9f9'
+    }}>
+      {/* Left Sidebar */}
       <div style={{ 
-        width: 380, 
-        background: 'white', 
-        borderRight: '1px solid #e8e8e8',
-        display: 'flex',
-        flexDirection: 'column'
-      }}>
-        <div style={{ 
-          padding: '20px 24px', 
-          borderBottom: '1px solid #e8e8e8',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <Title level={3} style={{ margin: 0, fontSize: 24 }}>
-            <MessageOutlined style={{ marginRight: 12, color: '#1890ff' }} />
-            Interview Sessions
-          </Title>
-          <Button 
-            type="primary" 
-            shape="circle" 
-            icon={<PlusOutlined />}
-            size="large"
-            onClick={() => setModalVisible(true)}
-          />
-        </div>
-
-        <div style={{ flex: 1, overflowY: 'auto', padding: '12px 0' }}>
-          {loading ? (
-            <div style={{ textAlign: 'center', padding: 48, color: '#999' }}>Loading...</div>
-          ) : items.length === 0 ? (
-            <Empty 
-              description="No sessions yet" 
-              style={{ marginTop: 80 }}
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-            />
-          ) : (
-            <List
-              dataSource={items}
-              renderItem={(item) => (
-                <div
-                  onClick={() => setSelectedSession(item)}
-                  style={{
-                    padding: '16px 24px',
-                    cursor: 'pointer',
-                    background: selectedSession?.session_id === item.session_id ? '#e6f7ff' : 'white',
-                    borderLeft: selectedSession?.session_id === item.session_id ? '4px solid #1890ff' : '4px solid transparent',
-                    transition: 'all 0.2s'
-                  }}
-                  onMouseEnter={(e) => {
-                    if (selectedSession?.session_id !== item.session_id) {
-                      e.currentTarget.style.background = '#fafafa'
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (selectedSession?.session_id !== item.session_id) {
-                      e.currentTarget.style.background = 'white'
-                    }
-                  }}
-                >
-                  <Space align="start" style={{ width: '100%' }}>
-                    <Avatar 
-                      size={52} 
-                      icon={<UserOutlined />} 
-                      style={{ background: getTypeColor(item.interview_type), flexShrink: 0 }}
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ 
-                        fontSize: 16, 
-                        fontWeight: 600, 
-                        marginBottom: 4,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap'
-                      }}>
-                        {item.session_name}
-                      </div>
-                      <div style={{ fontSize: 13, color: '#999', marginBottom: 6 }}>
-                        <ClockCircleOutlined style={{ marginRight: 4 }} />
-                        {new Date(item.created_at).toLocaleString('en-US', {
-                          month: 'short',
-                          day: 'numeric',
-                          hour: '2-digit',
-                          minute: '2-digit'
-                        })}
-                      </div>
-                      <Space size={8}>
-                        <Tag color={getTypeColor(item.interview_type)} style={{ margin: 0, borderRadius: 12 }}>
-                          {item.interview_type}
-                        </Tag>
-                        {item.score != null && (
-                          <Tag color="gold" style={{ margin: 0, borderRadius: 12 }}>
-                            Score: {item.score}
-                          </Tag>
-                        )}
-                      </Space>
-                    </div>
-                  </Space>
-                </div>
-              )}
-            />
-          )}
-        </div>
-      </div>
-
-      {/* Main Content - Chat Area */}
-      <div style={{ 
-        flex: 1, 
-        background: '#f5f7fa',
+        width: 260,
+        background: '#f5f5f5',
+        borderRight: '1px solid #e0e0e0',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center'
+        padding: '16px 12px'
       }}>
-        {selectedSession ? (
-          <Card style={{ 
-            maxWidth: 800, 
-            width: '90%', 
-            borderRadius: 16,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+        {/* New Chat Button */}
+        <Button
+          type="default"
+          icon={<PlusOutlined />}
+          size="large"
+          block
+          style={{
+            marginBottom: 24,
+            height: 44,
+            borderRadius: 8,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8
+          }}
+        >
+          Đoạn chat mới
+        </Button>
+
+        {/* Search */}
+        <Input
+          placeholder="Tìm kiếm đoạn chat"
+          style={{
+            marginBottom: 16,
+            borderRadius: 6
+          }}
+          prefix={<span style={{ color: '#999' }}>🔍</span>}
+        />
+
+        {/* Menu Items */}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
+          <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8, marginLeft: 8 }}>
+            GPT
+          </Text>
+          
+          <Space direction="vertical" size={4} style={{ width: '100%', marginBottom: 24 }}>
+            {gptOptions.map((option, idx) => (
+              <div
+                key={idx}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#e8e8e8'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <span style={{ fontSize: 16 }}>{option.icon}</span>
+                <Text style={{ fontSize: 14 }}>{option.name}</Text>
+              </div>
+            ))}
+          </Space>
+
+          <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8, marginLeft: 8 }}>
+            Dự án
+          </Text>
+          
+          <Space direction="vertical" size={4} style={{ width: '100%', marginBottom: 24 }}>
+            <div
+              style={{
+                padding: '10px 12px',
+                borderRadius: 6,
+                cursor: 'pointer',
+                transition: 'background 0.2s',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#e8e8e8'}
+              onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              <span style={{ fontSize: 16 }}>📁</span>
+              <Text style={{ fontSize: 14 }}>Dự án mới</Text>
+            </div>
+          </Space>
+
+          <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 8, marginLeft: 8 }}>
+            Các đoạn chat của bạn
+          </Text>
+          
+          <Space direction="vertical" size={4} style={{ width: '100%' }}>
+            {chatHistory.map((chat, idx) => (
+              <div
+                key={idx}
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  transition: 'background 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.background = '#e8e8e8'}
+                onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+              >
+                <span style={{ fontSize: 16 }}>💬</span>
+                <Text style={{ fontSize: 14 }}>{chat}</Text>
+              </div>
+            ))}
+          </Space>
+        </div>
+
+        {/* User Profile at Bottom */}
+        <div style={{
+          marginTop: 'auto',
+          padding: '12px',
+          borderTop: '1px solid #e0e0e0',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          cursor: 'pointer',
+          borderRadius: 6
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.background = '#e8e8e8'}
+        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+        >
+          <div style={{
+            width: 32,
+            height: 32,
+            borderRadius: '50%',
+            background: '#1890ff',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontWeight: 600
           }}>
-            <Space direction="vertical" align="center" style={{ width: '100%', textAlign: 'center' }} size="large">
-              <Avatar 
-                size={80} 
-                icon={<UserOutlined />} 
-                style={{ background: getTypeColor(selectedSession.interview_type) }}
-              />
-              <div>
-                <Title level={2} style={{ marginBottom: 8 }}>{selectedSession.session_name}</Title>
-                <Space size={12}>
-                  <Tag color={getTypeColor(selectedSession.interview_type)} style={{ fontSize: 14, padding: '4px 16px', borderRadius: 16 }}>
-                    {selectedSession.interview_type}
-                  </Tag>
-                  {selectedSession.score != null && (
-                    <Tag color="gold" style={{ fontSize: 14, padding: '4px 16px', borderRadius: 16 }}>
-                      📊 Score: {selectedSession.score}
-                    </Tag>
-                  )}
-                </Space>
-              </div>
-              <Text type="secondary" style={{ fontSize: 15 }}>
-                <ClockCircleOutlined style={{ marginRight: 6 }} />
-                Created on {new Date(selectedSession.created_at).toLocaleString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </Text>
-              <div style={{ 
-                width: '100%', 
-                padding: 24, 
-                background: '#f0f5ff', 
-                borderRadius: 12,
-                marginTop: 16
-              }}>
-                <Text style={{ fontSize: 15, color: '#666' }}>
-                  💬 Interview chat history and feedback will appear here
-                </Text>
-              </div>
-              <Space size={12}>
-                <Button type="primary" size="large" style={{ height: 44, padding: '0 32px', fontSize: 16, fontWeight: 600, borderRadius: 8 }}>
-                  Start Interview
-                </Button>
-                <Button size="large" style={{ height: 44, padding: '0 32px', fontSize: 16, borderRadius: 8 }}>
-                  View Details
-                </Button>
-              </Space>
-            </Space>
-          </Card>
-        ) : (
-          <Empty 
-            description={
-              <Space direction="vertical" size={12}>
-                <Text style={{ fontSize: 18, color: '#999' }}>Select a session from the left sidebar</Text>
-                <Text style={{ fontSize: 15, color: '#bbb' }}>or create a new one to get started</Text>
-              </Space>
-            }
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            style={{ marginTop: -80 }}
-          />
-        )}
+            {user?.full_name?.charAt(0).toUpperCase() || 'U'}
+          </div>
+          <div style={{ flex: 1 }}>
+            <Text style={{ fontSize: 14, fontWeight: 500, display: 'block' }}>
+              {user?.full_name || 'User'}
+            </Text>
+            <Text type="secondary" style={{ fontSize: 12 }}>Plus</Text>
+          </div>
+        </div>
       </div>
 
-      <Modal
-        title={
-          <Space>
-            <PlusOutlined />
-            <span>Create New Interview Session</span>
-          </Space>
-        }
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        footer={null}
-        width={500}
-      >
-        <Form form={form} layout="vertical" onFinish={onCreate} style={{ marginTop: 24 }}>
-          <Form.Item label="Session Name" name="session_name" rules={[{ required: true, message: 'Please enter session name' }]}>
-            <Input size="large" placeholder="e.g., Frontend Developer Interview" />
-          </Form.Item>
-          <Form.Item label="Interview Type" name="interview_type" rules={[{ required: true, message: 'Please select type' }]}>
-            <Select size="large" placeholder="Choose interview type">
-              <Select.Option value="simulated">🎭 Simulated Interview</Select.Option>
-              <Select.Option value="prep_feedback">📝 Prep & Feedback</Select.Option>
-            </Select>
-          </Form.Item>
-          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
-            <Button type="primary" htmlType="submit" block size="large" style={{ height: 44, fontSize: 16, fontWeight: 600, borderRadius: 8 }}>
-              Create Session
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* Main Chat Area */}
+      <div style={{ 
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'white'
+      }}>
+        {/* Chat Messages */}
+        <div style={{ 
+          flex: 1,
+          overflowY: 'auto',
+          padding: '40px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
+        }}>
+          {messages.length === 0 ? (
+            <div style={{ 
+              maxWidth: 800,
+              width: '100%',
+              textAlign: 'center',
+              marginTop: '15vh'
+            }}>
+              <Title level={1} style={{ 
+                fontSize: 42,
+                fontWeight: 600,
+                marginBottom: 48,
+                color: '#1a1a1a'
+              }}>
+                Hôm nay bạn có ý tưởng gì?
+              </Title>
+
+              <div style={{ 
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: 16,
+                marginBottom: 32
+              }}>
+                {samplePrompts.map((prompt, idx) => (
+                  <Card
+                    key={idx}
+                    hoverable
+                    style={{
+                      borderRadius: 12,
+                      border: '1px solid #e8e8e8',
+                      cursor: 'pointer',
+                      textAlign: 'left'
+                    }}
+                    bodyStyle={{ padding: '16px' }}
+                    onClick={() => setInputValue(prompt)}
+                  >
+                    <Text style={{ fontSize: 14, color: '#595959' }}>
+                      {prompt}
+                    </Text>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div style={{ maxWidth: 800, width: '100%' }}>
+              {messages.map((msg) => (
+                <div 
+                  key={msg.id}
+                  style={{ 
+                    marginBottom: 24,
+                    display: 'flex',
+                    gap: 16
+                  }}
+                >
+                  <div style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    background: msg.role === 'user' ? '#1890ff' : '#52c41a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 600,
+                    flexShrink: 0
+                  }}>
+                    {msg.role === 'user' ? (user?.full_name?.charAt(0).toUpperCase() || 'U') : 'AI'}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 15, lineHeight: 1.6, color: '#1a1a1a' }}>
+                      {msg.content}
+                    </Text>
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div style={{ 
+                  marginBottom: 24,
+                  display: 'flex',
+                  gap: 16
+                }}>
+                  <div style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: '50%',
+                    background: '#52c41a',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 600,
+                    flexShrink: 0
+                  }}>
+                    AI
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <Text type="secondary">Đang soạn câu trả lời...</Text>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Input Area */}
+        <div style={{ 
+          borderTop: '1px solid #e8e8e8',
+          padding: '24px',
+          background: 'white'
+        }}>
+          <div style={{ maxWidth: 800, margin: '0 auto' }}>
+            <div style={{ 
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
+              background: '#f5f5f5',
+              borderRadius: 24,
+              padding: '8px 16px',
+              border: '1px solid #e0e0e0'
+            }}>
+              <Button
+                type="text"
+                icon={<PlusOutlined />}
+                style={{ 
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              />
+              <Input
+                placeholder="Hỏi bất kỳ điều gì"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyPress={handleKeyPress}
+                bordered={false}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  fontSize: 15
+                }}
+              />
+              <Button
+                type="text"
+                icon={<span style={{ fontSize: 18 }}>🎤</span>}
+                style={{ 
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              />
+              <Button
+                type="primary"
+                icon={<SendOutlined />}
+                onClick={handleSend}
+                disabled={!inputValue.trim()}
+                style={{ 
+                  width: 36,
+                  height: 36,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: inputValue.trim() ? '#1890ff' : '#d9d9d9',
+                  border: 'none'
+                }}
+              />
+            </div>
+            <Text type="secondary" style={{ 
+              fontSize: 11,
+              display: 'block',
+              textAlign: 'center',
+              marginTop: 8
+            }}>
+              SkillSync AI có thể mắc lỗi. Hãy kiểm tra thông tin quan trọng.
+            </Text>
+          </div>
+        </div>
+      </div>
     </div>
   )
 }
