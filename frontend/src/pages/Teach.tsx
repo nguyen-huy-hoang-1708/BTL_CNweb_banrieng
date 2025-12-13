@@ -75,7 +75,7 @@ const Teach: React.FC = () => {
     <div style={{ background: '#fff' }}>
       {/* Hero Section */}
       <div style={{ 
-        background: 'linear-gradient(135deg, rgba(240, 147, 251, 0.95) 0%, rgba(245, 87, 108, 0.95) 100%), url("https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1920&q=80") center/cover',
+        background: 'linear-gradient(135deg, rgba(240, 147, 251, 0.3) 0%, rgba(245, 87, 108, 0.7) 100%), url("https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=1920&q=80") center/cover',
         padding: '80px 60px',
         color: '#fff',
         textAlign: 'center',

@@ -53,7 +53,7 @@ const Business: React.FC = () => {
     <div style={{ background: '#fff' }}>
       {/* Hero Section */}
       <div style={{ 
-        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.95) 0%, rgba(118, 75, 162, 0.95) 100%), url("https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&q=80") center/cover',
+        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.7) 100%), url("https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1920&q=80") center/cover',
         padding: '80px 60px',
         color: '#fff',
         textAlign: 'center',
